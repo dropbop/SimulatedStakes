@@ -411,7 +411,6 @@ export default function TestPage() {
       const royalEval = rankHand(royalFlush);
       const straightEval = rankHand(straightFlush);
       
-      // Using a helper function to compare hands
       const compareResult = royalEval.rank > straightEval.rank ? 1 : -1;
       
       results.push({
@@ -432,11 +431,100 @@ export default function TestPage() {
     
     // --- Additional Showdown Tests ---
     
-    // Test for the best hand from 7 cards: Royal Flush vs Straight Flush
+    // Basic Showdown Test: Higher pair (Aces) vs lower pair (Kings)
+    const showdownResults = [];
+    try {
+      const testGame = new PokerGame(2); // 2 players
+      
+      testGame.communityCards = [
+        new Card('spades', '2'),
+        new Card('hearts', '4'),
+        new Card('diamonds', '6'),
+        new Card('clubs', '8'),
+        new Card('spades', '10')
+      ];
+      
+      testGame.players[0].hand = [
+        new Card('hearts', 'A'),
+        new Card('diamonds', 'A')
+      ]; // Pair of Aces
+      
+      testGame.players[1].hand = [
+        new Card('clubs', 'K'),
+        new Card('spades', 'K')
+      ]; // Pair of Kings
+      
+      testGame.pot = 100;
+      testGame.showdown();
+      
+      showdownResults.push({
+        name: "Basic Showdown Test",
+        description: "Check if higher pair (Aces) wins against lower pair (Kings)",
+        passed: testGame.players[0].chips > testGame.players[1].chips,
+        expected: "Player with Aces wins the pot",
+        actual: `Player 0 has ${testGame.players[0].chips} chips, Player 1 has ${testGame.players[1].chips} chips`
+      });
+    } catch (error) {
+      showdownResults.push({
+        name: "Basic Showdown Test",
+        description: "Check if higher pair (Aces) wins against lower pair (Kings)",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Tied Hands Showdown Test: Split pot evenly
     try {
       const testGame = new PokerGame(2);
       
-      // Set up community cards for a complex scenario
+      testGame.communityCards = [
+        new Card('spades', 'A'),
+        new Card('hearts', 'A'),
+        new Card('diamonds', '2'),
+        new Card('clubs', '3'),
+        new Card('spades', '4')
+      ];
+      
+      testGame.players[0].hand = [
+        new Card('hearts', 'K'),
+        new Card('hearts', 'Q')
+      ];
+      
+      testGame.players[1].hand = [
+        new Card('clubs', 'K'),
+        new Card('clubs', 'Q')
+      ];
+      
+      testGame.pot = 100;
+      const initialChips0 = testGame.players[0].chips;
+      const initialChips1 = testGame.players[1].chips;
+      
+      testGame.showdown();
+      
+      const player0Won = testGame.players[0].chips > initialChips0;
+      const player1Won = testGame.players[1].chips > initialChips1;
+      const splitEvenly = (testGame.players[0].chips - initialChips0) === (testGame.players[1].chips - initialChips1);
+      
+      showdownResults.push({
+        name: "Tied Hands Showdown Test",
+        description: "Check if pot is split evenly when hands tie",
+        passed: player0Won && player1Won && splitEvenly,
+        expected: "Pot split evenly",
+        actual: `Player 0 won ${testGame.players[0].chips - initialChips0}, Player 1 won ${testGame.players[1].chips - initialChips1}`
+      });
+    } catch (error) {
+      showdownResults.push({
+        name: "Tied Hands Showdown Test",
+        description: "Check if pot is split evenly when hands tie",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Best Hand Selection Test: Royal Flush vs. Straight Flush from 7 cards
+    try {
+      const testGame = new PokerGame(2);
+      
       testGame.communityCards = [
         new Card('hearts', '2'),
         new Card('hearts', '4'),
@@ -445,25 +533,20 @@ export default function TestPage() {
         new Card('hearts', '10')
       ];
       
-      // Player 1 has a royal flush
       testGame.players[0].hand = [
         new Card('hearts', 'K'),
         new Card('hearts', 'A')
-      ];
+      ]; // Completes a Royal Flush
       
-      // Player 2 has a straight flush
       testGame.players[1].hand = [
         new Card('hearts', '3'),
         new Card('hearts', '5')
-      ];
+      ]; // Completes a Straight Flush
       
-      // Set up pot
       testGame.pot = 200;
-      
-      // Execute showdown
       testGame.showdown();
       
-      results.push({
+      showdownResults.push({
         name: "Best Hand Selection Test",
         description: "Check if royal flush wins against straight flush when using the best 5 cards from 7",
         passed: testGame.players[0].chips > testGame.players[1].chips,
@@ -471,7 +554,7 @@ export default function TestPage() {
         actual: `Player 0 has ${testGame.players[0].chips} chips, Player 1 has ${testGame.players[1].chips} chips`
       });
     } catch (error) {
-      results.push({
+      showdownResults.push({
         name: "Best Hand Selection Test",
         description: "Check if royal flush wins against straight flush when using the best 5 cards from 7",
         passed: false,
@@ -479,16 +562,14 @@ export default function TestPage() {
       });
     }
     
-    // Test for side pot functionality in an all-in scenario
+    // All-in Side Pot Test (note: side pot logic is not fully implemented)
     try {
-      const testGame = new PokerGame(3); // Three players
+      const testGame = new PokerGame(3);
       
-      // Set up chips
       testGame.players[0].chips = 100;
       testGame.players[1].chips = 500;
       testGame.players[2].chips = 1000;
       
-      // Community cards
       testGame.communityCards = [
         new Card('clubs', '3'),
         new Card('clubs', '4'),
@@ -497,33 +578,30 @@ export default function TestPage() {
         new Card('clubs', '7')
       ];
       
-      // Player hands
       testGame.players[0].hand = [
         new Card('hearts', 'A'),
         new Card('diamonds', 'A')
-      ]; // Pair of Aces
+      ];
       
       testGame.players[1].hand = [
         new Card('clubs', '2'),
         new Card('clubs', '8')
-      ]; // Straight flush 
+      ];
       
       testGame.players[2].hand = [
         new Card('hearts', 'K'),
         new Card('diamonds', 'K')
-      ]; // Pair of Kings
+      ];
       
-      // Set up bets and all-in
       testGame.players[0].makeBet(100);
       testGame.players[0].allIn = true;
       testGame.players[1].makeBet(100);
       testGame.players[2].makeBet(100);
       testGame.pot = 300;
       
-      // Execute showdown
       testGame.showdown();
       
-      results.push({
+      showdownResults.push({
         name: "All-in Side Pot Test",
         description: "Check if side pot logic works correctly when a player is all-in",
         passed: testGame.players[1].chips > testGame.players[0].chips && testGame.players[1].chips > testGame.players[2].chips,
@@ -531,7 +609,7 @@ export default function TestPage() {
         actual: `Player 0 (all-in): ${testGame.players[0].chips}, Player 1: ${testGame.players[1].chips}, Player 2: ${testGame.players[2].chips}`
       });
     } catch (error) {
-      results.push({
+      showdownResults.push({
         name: "All-in Side Pot Test",
         description: "Check if side pot logic works correctly when a player is all-in",
         passed: false,
@@ -539,7 +617,17 @@ export default function TestPage() {
       });
     }
     
-    setShowdownTests(results);
+    // Merge the evaluator tests and showdown tests
+    setShowdownTests([...results, ...showdownResults]);
+  };
+
+  // Define testShowdown so the button can call it
+  const testShowdown = () => {
+    if (!gameInstance) return;
+    // Clear any existing showdown tests
+    setShowdownTests([]);
+    // Run all showdown-related tests (which are part of runHandEvaluatorTests)
+    runHandEvaluatorTests();
   };
 
   // Auto-play hand function for complete game flow test
@@ -556,7 +644,6 @@ export default function TestPage() {
     
     while (gameInstance.gamePhase !== 'endHand' && i < maxIterations) {
       if (gameInstance.players[gameInstance.currentPlayerIndex].isHuman) {
-        // If it's the human's turn, perform check/call if available; otherwise fold
         const actions = gameInstance.getAvailableActions();
         if (actions.includes('check')) {
           gameInstance.check();
@@ -566,7 +653,6 @@ export default function TestPage() {
           gameInstance.fold();
         }
       } else {
-        // Let AI make its decision
         gameInstance.makeAIDecision();
       }
       i++;
@@ -585,7 +671,6 @@ export default function TestPage() {
   // Start a new hand
   const startNewHand = () => {
     if (!gameInstance) return;
-    
     gameInstance.startNewHand();
     setGameState(gameInstance.getState());
   };
@@ -611,7 +696,6 @@ export default function TestPage() {
   
   const handleRaise = () => {
     if (!gameInstance) return;
-    // Simple fixed raise for testing
     const raiseAmount = gameState.minRaise;
     try {
       const newState = gameInstance.raise(raiseAmount);
