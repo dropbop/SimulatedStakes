@@ -1,27 +1,25 @@
 {
   "name": "simulatedstakes",
   "version": "1.0.0",
-  "description": "A poker game simulation built with React.",
+  "description": "A poker game simulation built with Next.js and React.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "keywords": [
     "poker",
     "game",
-    "simulation"
+    "simulation",
+    "nextjs"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "next": "^13.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "react-scripts": "^5.0.1"
   }
 }
