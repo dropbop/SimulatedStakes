@@ -538,6 +538,56 @@ export default function TestPage() {
       });
     }
     
+    // New test: Best Hand Selection Test
+    try {
+      // Test for the best hand from 7 cards
+      const testGame = new PokerGame(2);
+      
+      // Set up community cards for a complex scenario
+      testGame.communityCards = [
+        new Card('hearts', '2'),
+        new Card('hearts', '4'),
+        new Card('hearts', '6'),
+        new Card('hearts', '8'),
+        new Card('hearts', '10')
+      ];
+      
+      // Player 1 has a royal flush
+      testGame.players[0].hand = [
+        new Card('hearts', 'K'),
+        new Card('hearts', 'A')
+      ];
+      
+      // Player 2 has a straight flush
+      testGame.players[1].hand = [
+        new Card('hearts', '3'),
+        new Card('hearts', '5')
+      ];
+      
+      // Set up pot
+      testGame.pot = 200;
+      const initialChips0 = testGame.players[0].chips;
+      const initialChips1 = testGame.players[1].chips;
+      
+      // Execute showdown
+      testGame.showdown();
+      
+      results.push({
+        name: "Best Hand Selection Test",
+        description: "Check if royal flush wins against straight flush when using the best 5 cards from 7",
+        passed: testGame.players[0].chips > initialChips0 && testGame.players[0].chips > testGame.players[1].chips,
+        expected: "Player with Royal Flush wins the pot",
+        actual: `Player 0 has ${testGame.players[0].chips} chips, Player 1 has ${testGame.players[1].chips} chips`
+      });
+    } catch (error) {
+      results.push({
+        name: "Best Hand Selection Test",
+        description: "Check if royal flush wins against straight flush when using the best 5 cards from 7",
+        passed: false,
+        error: error.message
+      });
+    }
+    
     setShowdownTests(results);
   };
 
@@ -578,6 +628,45 @@ export default function TestPage() {
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  // Auto-play a full hand - useful for testing game flow
+  const autoPlayHand = () => {
+    if (!gameInstance) return;
+    
+    // Start a new hand
+    gameInstance.startNewHand();
+    setGameState(gameInstance.getState());
+    
+    // Keep making AI decisions until the hand is over
+    let i = 0;
+    const maxIterations = 100; // Safety to prevent infinite loops
+    
+    while (gameInstance.gamePhase !== 'endHand' && i < maxIterations) {
+      if (gameInstance.players[gameInstance.currentPlayerIndex].isHuman) {
+        // If it's the human's turn, make them check/call
+        if (gameInstance.getAvailableActions().includes('check')) {
+          gameInstance.check();
+        } else if (gameInstance.getAvailableActions().includes('call')) {
+          gameInstance.call();
+        } else {
+          gameInstance.fold();
+        }
+      } else {
+        // Let AI make its decision
+        gameInstance.makeAIDecision();
+      }
+      i++;
+    }
+    
+    setGameState(gameInstance.getState());
+    
+    return {
+      success: gameInstance.gamePhase === 'endHand',
+      iterations: i,
+      finalPhase: gameInstance.gamePhase,
+      log: gameInstance.log
+    };
   };
 
   // Render card for testing
@@ -701,6 +790,17 @@ export default function TestPage() {
           onClick={startNewHand}
         >
           Start New Hand
+        </button>
+        
+        <button 
+          style={{...styles.button, backgroundColor: '#2196f3', marginLeft: '10px'}} 
+          onClick={() => {
+            const result = autoPlayHand();
+            console.log('Auto-play result:', result);
+            alert(`Auto-play complete in ${result.iterations} actions. Final phase: ${result.finalPhase}`);
+          }}
+        >
+          Auto-Play Hand
         </button>
         
         {gameState && gameState.phase !== 'endHand' && gameState.players[gameState.currentPlayer].isHuman && (
