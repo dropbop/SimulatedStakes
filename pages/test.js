@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, Deck, Player, PokerGame } from '../lib/gameLogic';
+import { evaluateHand, rankHand, determineWinners, HAND_RANKINGS } from '../lib/handEvaluator';
 
 // Simple styling
 const styles = {
@@ -72,6 +73,19 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  testResult: {
+    padding: '8px',
+    margin: '5px 0',
+    borderRadius: '4px',
+  },
+  testPass: {
+    backgroundColor: '#a5d6a7',
+    color: '#1b5e20',
+  },
+  testFail: {
+    backgroundColor: '#ef9a9a',
+    color: '#b71c1c',
   }
 };
 
@@ -79,6 +93,8 @@ export default function TestPage() {
   const [gameInstance, setGameInstance] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [deckTest, setDeckTest] = useState({ cards: [] });
+  const [handEvaluatorTests, setHandEvaluatorTests] = useState([]);
+  const [showdownTests, setShowdownTests] = useState([]);
 
   // Initialize game
   useEffect(() => {
@@ -94,8 +110,436 @@ export default function TestPage() {
     const game = new PokerGame();
     setGameInstance(game);
     
+    // Run hand evaluator tests
+    runHandEvaluatorTests();
+    
     // No need to start a hand yet - we'll do that with a button
   }, []);
+
+  // Run tests for the hand evaluator
+  const runHandEvaluatorTests = () => {
+    const results = [];
+    
+    // Test 1: Check Royal Flush
+    try {
+      const royalFlush = [
+        new Card('spades', 'A'),
+        new Card('spades', 'K'),
+        new Card('spades', 'Q'),
+        new Card('spades', 'J'),
+        new Card('spades', '10')
+      ];
+      
+      const evaluation = rankHand(royalFlush);
+      results.push({
+        name: "Royal Flush Detection",
+        description: "Check if a royal flush is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.ROYAL_FLUSH,
+        expected: "Royal Flush",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Royal Flush Detection",
+        description: "Check if a royal flush is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 2: Check Straight Flush
+    try {
+      const straightFlush = [
+        new Card('hearts', '9'),
+        new Card('hearts', '8'),
+        new Card('hearts', '7'),
+        new Card('hearts', '6'),
+        new Card('hearts', '5')
+      ];
+      
+      const evaluation = rankHand(straightFlush);
+      results.push({
+        name: "Straight Flush Detection",
+        description: "Check if a straight flush is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.STRAIGHT_FLUSH,
+        expected: "Straight Flush",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Straight Flush Detection",
+        description: "Check if a straight flush is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 3: Check Four of a Kind
+    try {
+      const fourOfAKind = [
+        new Card('spades', '8'),
+        new Card('hearts', '8'),
+        new Card('diamonds', '8'),
+        new Card('clubs', '8'),
+        new Card('hearts', 'K')
+      ];
+      
+      const evaluation = rankHand(fourOfAKind);
+      results.push({
+        name: "Four of a Kind Detection",
+        description: "Check if four of a kind is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.FOUR_OF_A_KIND,
+        expected: "Four of a Kind",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Four of a Kind Detection",
+        description: "Check if four of a kind is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 4: Check Full House
+    try {
+      const fullHouse = [
+        new Card('spades', 'J'),
+        new Card('hearts', 'J'),
+        new Card('diamonds', 'J'),
+        new Card('clubs', '9'),
+        new Card('hearts', '9')
+      ];
+      
+      const evaluation = rankHand(fullHouse);
+      results.push({
+        name: "Full House Detection",
+        description: "Check if a full house is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.FULL_HOUSE,
+        expected: "Full House",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Full House Detection",
+        description: "Check if a full house is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 5: Check Flush
+    try {
+      const flush = [
+        new Card('diamonds', 'A'),
+        new Card('diamonds', '10'),
+        new Card('diamonds', '8'),
+        new Card('diamonds', '6'),
+        new Card('diamonds', '4')
+      ];
+      
+      const evaluation = rankHand(flush);
+      results.push({
+        name: "Flush Detection",
+        description: "Check if a flush is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.FLUSH,
+        expected: "Flush",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Flush Detection",
+        description: "Check if a flush is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 6: Check Straight
+    try {
+      const straight = [
+        new Card('spades', 'Q'),
+        new Card('hearts', 'J'),
+        new Card('diamonds', '10'),
+        new Card('clubs', '9'),
+        new Card('hearts', '8')
+      ];
+      
+      const evaluation = rankHand(straight);
+      results.push({
+        name: "Straight Detection",
+        description: "Check if a straight is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.STRAIGHT,
+        expected: "Straight",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Straight Detection",
+        description: "Check if a straight is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 7: Check Three of a Kind
+    try {
+      const threeOfAKind = [
+        new Card('spades', '5'),
+        new Card('hearts', '5'),
+        new Card('diamonds', '5'),
+        new Card('clubs', 'K'),
+        new Card('hearts', '7')
+      ];
+      
+      const evaluation = rankHand(threeOfAKind);
+      results.push({
+        name: "Three of a Kind Detection",
+        description: "Check if three of a kind is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.THREE_OF_A_KIND,
+        expected: "Three of a Kind",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Three of a Kind Detection",
+        description: "Check if three of a kind is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 8: Check Two Pair
+    try {
+      const twoPair = [
+        new Card('spades', 'Q'),
+        new Card('hearts', 'Q'),
+        new Card('diamonds', '6'),
+        new Card('clubs', '6'),
+        new Card('hearts', 'A')
+      ];
+      
+      const evaluation = rankHand(twoPair);
+      results.push({
+        name: "Two Pair Detection",
+        description: "Check if two pair is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.TWO_PAIR,
+        expected: "Two Pair",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "Two Pair Detection",
+        description: "Check if two pair is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 9: Check One Pair
+    try {
+      const onePair = [
+        new Card('spades', '10'),
+        new Card('hearts', '10'),
+        new Card('diamonds', 'K'),
+        new Card('clubs', '7'),
+        new Card('hearts', '2')
+      ];
+      
+      const evaluation = rankHand(onePair);
+      results.push({
+        name: "One Pair Detection",
+        description: "Check if one pair is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.ONE_PAIR,
+        expected: "One Pair",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "One Pair Detection",
+        description: "Check if one pair is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 10: Check High Card
+    try {
+      const highCard = [
+        new Card('spades', 'A'),
+        new Card('hearts', 'J'),
+        new Card('diamonds', '9'),
+        new Card('clubs', '7'),
+        new Card('hearts', '3')
+      ];
+      
+      const evaluation = rankHand(highCard);
+      results.push({
+        name: "High Card Detection",
+        description: "Check if high card is correctly identified",
+        passed: evaluation.rank === HAND_RANKINGS.HIGH_CARD,
+        expected: "High Card",
+        actual: evaluation.name
+      });
+    } catch (error) {
+      results.push({
+        name: "High Card Detection",
+        description: "Check if high card is correctly identified",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    // Test 11: Check Hand Comparison - Royal Flush vs Straight Flush
+    try {
+      const royalFlush = [
+        new Card('spades', 'A'),
+        new Card('spades', 'K'),
+        new Card('spades', 'Q'),
+        new Card('spades', 'J'),
+        new Card('spades', '10')
+      ];
+      
+      const straightFlush = [
+        new Card('hearts', '9'),
+        new Card('hearts', '8'),
+        new Card('hearts', '7'),
+        new Card('hearts', '6'),
+        new Card('hearts', '5')
+      ];
+      
+      const royalEval = rankHand(royalFlush);
+      const straightEval = rankHand(straightFlush);
+      
+      // Using a helper function to compare hands
+      const compareResult = royalEval.rank > straightEval.rank ? 1 : -1;
+      
+      results.push({
+        name: "Hand Comparison - Royal Flush vs Straight Flush",
+        description: "Check if royal flush beats straight flush",
+        passed: compareResult === 1,
+        expected: "Royal Flush wins",
+        actual: compareResult === 1 ? "Royal Flush wins" : "Straight Flush wins"
+      });
+    } catch (error) {
+      results.push({
+        name: "Hand Comparison - Royal Flush vs Straight Flush",
+        description: "Check if royal flush beats straight flush",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    setHandEvaluatorTests(results);
+  };
+
+  // Test the showdown functionality with mock players and hands
+  const testShowdown = () => {
+    if (!gameInstance) return;
+    
+    const results = [];
+    
+    try {
+      // Create a test game with known cards
+      const testGame = new PokerGame(2); // Just 2 players for simplicity
+      
+      // Set up community cards
+      testGame.communityCards = [
+        new Card('spades', '2'),
+        new Card('hearts', '4'),
+        new Card('diamonds', '6'),
+        new Card('clubs', '8'),
+        new Card('spades', '10')
+      ];
+      
+      // Set up player hands
+      testGame.players[0].hand = [
+        new Card('hearts', 'A'),
+        new Card('diamonds', 'A')
+      ]; // Player 0 has a pair of Aces
+      
+      testGame.players[1].hand = [
+        new Card('clubs', 'K'),
+        new Card('spades', 'K')
+      ]; // Player 1 has a pair of Kings
+      
+      // Set up some pot amount
+      testGame.pot = 100;
+      
+      // Execute showdown
+      testGame.showdown();
+      
+      results.push({
+        name: "Basic Showdown Test",
+        description: "Check if higher pair (Aces) wins against lower pair (Kings)",
+        passed: testGame.players[0].chips > testGame.players[1].chips,
+        expected: "Player with Aces wins the pot",
+        actual: `Player 0 has ${testGame.players[0].chips} chips, Player 1 has ${testGame.players[1].chips} chips`
+      });
+    } catch (error) {
+      results.push({
+        name: "Basic Showdown Test",
+        description: "Check if higher pair (Aces) wins against lower pair (Kings)",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    try {
+      // Test handling of tied hands
+      const testGame = new PokerGame(2);
+      
+      // Set up community cards for a tie scenario
+      testGame.communityCards = [
+        new Card('spades', 'A'),
+        new Card('hearts', 'A'),
+        new Card('diamonds', '2'),
+        new Card('clubs', '3'),
+        new Card('spades', '4')
+      ];
+      
+      // Both players have the same pair of aces with the same kickers
+      testGame.players[0].hand = [
+        new Card('hearts', 'K'),
+        new Card('hearts', 'Q')
+      ];
+      
+      testGame.players[1].hand = [
+        new Card('clubs', 'K'),
+        new Card('clubs', 'Q')
+      ];
+      
+      // Set up some pot amount
+      testGame.pot = 100;
+      const initialChips0 = testGame.players[0].chips;
+      const initialChips1 = testGame.players[1].chips;
+      
+      // Execute showdown
+      testGame.showdown();
+      
+      // Check if pot was split evenly
+      const player0Won = testGame.players[0].chips > initialChips0;
+      const player1Won = testGame.players[1].chips > initialChips1;
+      const splitEvenly = testGame.players[0].chips - initialChips0 === testGame.players[1].chips - initialChips1;
+      
+      results.push({
+        name: "Tied Hands Showdown Test",
+        description: "Check if pot is split evenly when hands tie",
+        passed: player0Won && player1Won && splitEvenly,
+        expected: "Pot split evenly",
+        actual: `Player 0 won ${testGame.players[0].chips - initialChips0}, Player 1 won ${testGame.players[1].chips - initialChips1}`
+      });
+    } catch (error) {
+      results.push({
+        name: "Tied Hands Showdown Test",
+        description: "Check if pot is split evenly when hands tie",
+        passed: false,
+        error: error.message
+      });
+    }
+    
+    setShowdownTests(results);
+  };
 
   // Start a new hand
   const startNewHand = () => {
@@ -186,9 +630,58 @@ export default function TestPage() {
     );
   };
 
+  // Render test results
+  const renderTestResult = (test) => {
+    return (
+      <div 
+        key={test.name} 
+        style={{
+          ...styles.testResult,
+          ...(test.passed ? styles.testPass : styles.testFail)
+        }}
+      >
+        <div><strong>{test.name}</strong> - {test.passed ? 'PASS' : 'FAIL'}</div>
+        <div>{test.description}</div>
+        {test.expected && <div>Expected: {test.expected}</div>}
+        {test.actual && <div>Actual: {test.actual}</div>}
+        {test.error && <div>Error: {test.error}</div>}
+      </div>
+    );
+  };
+
   return (
     <div style={styles.container}>
       <h1>Poker Game Test Page</h1>
+      
+      {/* Hand Evaluator Tests Section */}
+      <div style={styles.section}>
+        <h2 style={styles.title}>Hand Evaluator Tests</h2>
+        <div>
+          {handEvaluatorTests.length > 0 ? (
+            handEvaluatorTests.map(renderTestResult)
+          ) : (
+            <p>No hand evaluator tests have been run yet.</p>
+          )}
+        </div>
+      </div>
+      
+      {/* Showdown Tests Section */}
+      <div style={styles.section}>
+        <h2 style={styles.title}>Showdown Tests</h2>
+        <button 
+          style={styles.button} 
+          onClick={testShowdown}
+        >
+          Run Showdown Tests
+        </button>
+        <div style={{ marginTop: '10px' }}>
+          {showdownTests.length > 0 ? (
+            showdownTests.map(renderTestResult)
+          ) : (
+            <p>No showdown tests have been run yet.</p>
+          )}
+        </div>
+      </div>
       
       {/* Card Test Section */}
       <div style={styles.section}>
