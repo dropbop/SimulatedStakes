@@ -104,6 +104,37 @@ export default function TestPage() {
     gameInstance.startNewHand();
     setGameState(gameInstance.getState());
   };
+  
+  // Player actions
+  const handleFold = () => {
+    if (!gameInstance) return;
+    const newState = gameInstance.fold();
+    setGameState(newState);
+  };
+  
+  const handleCheck = () => {
+    if (!gameInstance) return;
+    const newState = gameInstance.check();
+    setGameState(newState);
+  };
+  
+  const handleCall = () => {
+    if (!gameInstance) return;
+    const newState = gameInstance.call();
+    setGameState(newState);
+  };
+  
+  const handleRaise = () => {
+    if (!gameInstance) return;
+    // Simple fixed raise for testing
+    const raiseAmount = gameState.minRaise;
+    try {
+      const newState = gameInstance.raise(raiseAmount);
+      setGameState(newState);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   // Render card for testing
   const renderCard = (card) => {
@@ -179,12 +210,45 @@ export default function TestPage() {
           Start New Hand
         </button>
         
+        {gameState && gameState.phase !== 'endHand' && gameState.players[gameState.currentPlayer].isHuman && (
+          <div style={{ marginTop: '10px' }}>
+            <h3>Your Turn - Available Actions:</h3>
+            <div>
+              {gameState.availableActions.includes('fold') && (
+                <button style={{...styles.button, backgroundColor: '#f44336'}} onClick={handleFold}>Fold</button>
+              )}
+              {gameState.availableActions.includes('check') && (
+                <button style={{...styles.button, backgroundColor: '#2196f3'}} onClick={handleCheck}>Check</button>
+              )}
+              {gameState.availableActions.includes('call') && (
+                <button style={{...styles.button, backgroundColor: '#4CAF50'}} onClick={handleCall}>
+                  Call ${gameState.currentBet - gameState.players[gameState.currentPlayer].currentBet}
+                </button>
+              )}
+              {gameState.availableActions.includes('raise') && (
+                <button style={{...styles.button, backgroundColor: '#FF9800'}} onClick={handleRaise}>
+                  Raise to ${gameState.currentBet + gameState.minRaise}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        
         {gameState && (
           <div style={styles.gameState}>
             <h3>Game State</h3>
             <p>Phase: {gameState.phase}</p>
             <p>Pot: ${gameState.pot}</p>
             <p>Current Bet: ${gameState.currentBet}</p>
+            
+            {gameState.communityCards.length > 0 && (
+              <div>
+                <h3>Community Cards</h3>
+                <div style={styles.cardTest}>
+                  {gameState.communityCards.map((card, index) => renderCard(card))}
+                </div>
+              </div>
+            )}
             
             <h3>Players</h3>
             {gameState.players.map((player, index) => renderPlayer(player, index))}

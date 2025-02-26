@@ -1,20 +1,27 @@
-# Simulated Stakes
+# Poker Game Project
 
 A single-player poker game built with Next.js where you play against AI opponents.
 
 ## Current Development Status
 
-### Phase 1: Cards and Basic Setup (Current Phase)
+### Phase 1: Cards and Basic Setup ✓
 - ✅ Implemented card and deck management
 - ✅ Created player objects with basic properties
 - ✅ Set up game state structure
 - ✅ Added blind posting and initial dealing
 - ✅ Created test page to verify functionality
 
+### Phase 2: Game Flow (Current Phase)
+- ✅ Implemented player actions (fold, check, call, raise)
+- ✅ Added community card dealing (flop, turn, river)
+- ✅ Created betting round management
+- ✅ Implemented simple AI decision-making
+- ✅ Added game phase progression
+- ⬜ Implement proper showdown logic
+
 ### Future Phases:
-- Phase 2: Game Flow (dealing, game phases, turn structure, betting)
 - Phase 3: Hand Evaluation (determine winners, pot distribution)
-- Phase 4: AI Players (decision-making logic)
+- Phase 4: Advanced AI Players (improved decision-making)
 - Phase 5: UI Integration (fully functional game interface)
 
 ## Current Project Structure
@@ -56,11 +63,27 @@ Represents a player in the game with:
 
 ### PokerGame Class
 Orchestrates the entire game with:
-- Game phase management
-- Player turn tracking
+- Game phase management (preflop, flop, turn, river, showdown)
+- Player turn tracking and action handling
 - Dealer and blind position rotation
-- Pot management
+- Pot management and betting rounds
+- Community card dealing
+- Simple AI decision making
 - Game action logging
+
+## Game Flow
+1. New hand is started
+2. Cards are dealt to players
+3. Blinds are posted
+4. Pre-flop betting round
+5. Flop is dealt (3 community cards)
+6. Flop betting round
+7. Turn is dealt (4th community card)
+8. Turn betting round
+9. River is dealt (5th community card)
+10. River betting round
+11. Showdown (compare hands and determine winner)
+12. Award pot to winner
 
 ## Testing
 Visit the `/test` page to see the card system in action and verify game initialization.
