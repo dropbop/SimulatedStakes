@@ -673,8 +673,8 @@ const dealerButtonOffsets = [
 
 // Animation speed settings (ms between AI moves)
 const SPEED_OPTIONS = {
-  slow: { label: 'Slow', delay: 1200 },
-  normal: { label: 'Normal', delay: 800 },
+  slow: { label: 'Slow', delay: 2000 },
+  normal: { label: 'Normal', delay: 1200 },
   fast: { label: 'Fast', delay: 500 },
 };
 
@@ -1165,12 +1165,12 @@ export default function PokerTable() {
         {gameState?.log && gameState.log.length > 0 && (
           <div style={styles.gameLog}>
             <div style={styles.logHeader}>Game History</div>
-            {gameState.log.slice(-15).map((entry, index, arr) => (
+            {gameState.log.slice(-15).reverse().map((entry, index) => (
               <div
                 key={index}
                 style={{
                   ...styles.logEntry,
-                  ...(index === arr.length - 1 ? styles.logEntryLatest : {})
+                  ...(index === 0 ? styles.logEntryLatest : {})
                 }}
               >
                 {entry}
