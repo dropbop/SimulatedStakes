@@ -1212,6 +1212,23 @@ export default function PokerTable() {
               Off
             </button>
           </div>
+          <a
+            href="https://github.com/dropbop/SimulatedStakes"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'block',
+              marginTop: '20px',
+              paddingTop: '16px',
+              borderTop: '1px solid rgba(201, 162, 39, 0.3)',
+              color: '#c9a227',
+              textDecoration: 'none',
+              fontSize: '13px',
+              textAlign: 'center',
+            }}
+          >
+            GitHub Repository →
+          </a>
         </div>
       )}
 
