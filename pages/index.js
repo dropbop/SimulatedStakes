@@ -10,6 +10,13 @@ const globalStyles = `
     box-sizing: border-box;
   }
 
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+  }
+
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -175,8 +182,8 @@ const globalStyles = `
 // Casino Royale themed styles - Refined & Cinematic
 const styles = {
   container: {
-    minHeight: '100vh',
-    padding: '24px',
+    height: '100vh',
+    padding: '20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -338,11 +345,8 @@ const styles = {
       radial-gradient(ellipse at 50% 30%, rgba(35, 90, 55, 0.95) 0%, rgba(20, 60, 35, 0.95) 40%, rgba(12, 40, 25, 0.98) 70%, rgba(8, 28, 18, 1) 100%)
     `,
     borderRadius: '50%',
-    border: '10px solid #1a1410',
+    border: '12px solid #1a1410',
     boxShadow: `
-      0 0 0 3px rgba(139, 90, 43, 0.4),
-      0 0 0 12px #0d0a08,
-      0 0 0 14px rgba(139, 90, 43, 0.2),
       inset 0 0 100px rgba(0,0,0,0.5),
       0 25px 80px rgba(0,0,0,0.8)
     `,
