@@ -302,12 +302,22 @@ export default function PokerTable() {
 
   // Start a new hand
   const startNewHand = useCallback(() => {
-    if (!game || isProcessing) return;
+    console.log('startNewHand called', { game: !!game, isProcessing });
+    if (!game) return;
+    if (isProcessing) {
+      console.log('Blocked by isProcessing, forcing reset');
+      setIsProcessing(false);
+      return;
+    }
 
     setIsProcessing(true);
-    const state = game.startNewHand();
-    setGameState(state);
-    setBetAmount(state.minRaise * 2);
+    try {
+      const state = game.startNewHand();
+      setGameState(state);
+      setBetAmount(state.minRaise * 2);
+    } catch (error) {
+      console.error('startNewHand error:', error);
+    }
 
     // Small delay to let AI actions complete
     setTimeout(() => {
