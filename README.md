@@ -13,7 +13,7 @@ npm run dev
 ## Features
 
 - **Cinematic UI** - Elegant dark theme with gold accents, custom animations, and smooth transitions
-- **$1,000,000 Buy-in** - High-stakes tournament with escalating blinds ($5K/$10K starting, increases every 8 hands)
+- **$10,000,000 Buy-in** - Film-accurate stakes with escalating blinds ($50K/$100K starting, increases every 8 hands)
 - **Skilled AI Opponents** - Position-aware betting, pot odds calculation, personality-driven decisions
 - **Character Voice Lines** - Dynamic dialogue system with probability-based triggers and cooldowns
 - **Stack-Aware Betting** - AI won't recklessly go all-in; risk management based on hand strength and stack size
@@ -43,15 +43,17 @@ npm run dev
 
 ## Tournament Structure
 
-Blinds escalate every 8 hands:
+Film-accurate stakes ($60M total chips in play). Blinds escalate every 8 hands:
 
 | Level | Blinds |
 |-------|--------|
-| 0 | $5,000 / $10,000 |
-| 1 | $10,000 / $20,000 |
-| 2 | $15,000 / $30,000 |
-| 3 | $25,000 / $50,000 |
-| 4+ | Continues increasing... |
+| 0 | $50,000 / $100,000 |
+| 1 | $100,000 / $200,000 |
+| 2 | $150,000 / $300,000 |
+| 3 | $250,000 / $500,000 |
+| 4 | $500,000 / $1,000,000 |
+| 5 | $750,000 / $1,500,000 |
+| 6+ | Continues to $3M/$6M... |
 
 ## Testing
 
