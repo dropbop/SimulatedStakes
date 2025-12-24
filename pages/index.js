@@ -233,16 +233,16 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    maxWidth: '1000px',
+    maxWidth: '1200px',
     position: 'relative',
     zIndex: 1,
   },
   table: {
     position: 'relative',
-    height: '520px',
+    height: '620px',
     margin: '0 auto',
     width: '100%',
-    maxWidth: '900px',
+    maxWidth: '1050px',
     background: `
       radial-gradient(ellipse at 50% 30%, rgba(35, 90, 55, 0.95) 0%, rgba(20, 60, 35, 0.95) 40%, rgba(12, 40, 25, 0.98) 70%, rgba(8, 28, 18, 1) 100%)
     `,
@@ -522,22 +522,38 @@ const styles = {
     fontFamily: "'Outfit', sans-serif",
   },
   gameLog: {
-    marginTop: '24px',
-    padding: '16px 20px',
-    background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.9) 0%, rgba(5, 5, 7, 0.95) 100%)',
-    borderRadius: '12px',
-    maxHeight: '140px',
+    marginTop: '28px',
+    padding: '20px 24px',
+    background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
+    borderRadius: '14px',
+    maxHeight: '220px',
     overflowY: 'auto',
     width: '100%',
-    maxWidth: '550px',
-    border: '1px solid rgba(255, 255, 255, 0.04)',
-    backdropFilter: 'blur(8px)',
+    maxWidth: '700px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+  },
+  logHeader: {
+    fontSize: '0.7rem',
+    color: 'rgba(201, 162, 39, 0.6)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.2em',
+    marginBottom: '12px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
   },
   logEntry: {
-    margin: '6px 0',
-    fontSize: '0.8rem',
-    color: 'rgba(200, 195, 185, 0.55)',
-    lineHeight: '1.4',
+    margin: '8px 0',
+    fontSize: '0.85rem',
+    color: 'rgba(220, 215, 205, 0.75)',
+    lineHeight: '1.5',
+    paddingLeft: '12px',
+    borderLeft: '2px solid rgba(201, 162, 39, 0.2)',
+  },
+  logEntryLatest: {
+    color: 'rgba(232, 224, 213, 0.95)',
+    borderLeft: '2px solid rgba(201, 162, 39, 0.6)',
   },
   statusMessage: {
     textAlign: 'center',
@@ -552,24 +568,24 @@ const styles = {
   },
 };
 
-// Player positions around the table (6 players)
+// Player positions around the table (6 players) - spread out for larger table
 const playerPositions = [
-  { bottom: '8px', left: '50%', transform: 'translateX(-50%)' },
-  { bottom: '115px', left: '4%' },
-  { top: '80px', left: '4%' },
-  { top: '8px', left: '50%', transform: 'translateX(-50%)' },
-  { top: '80px', right: '4%' },
-  { bottom: '115px', right: '4%' },
+  { bottom: '15px', left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
+  { bottom: '140px', left: '6%' },   // Left bottom
+  { top: '100px', left: '6%' },      // Left top
+  { top: '15px', left: '50%', transform: 'translateX(-50%)' },     // Top center
+  { top: '100px', right: '6%' },     // Right top
+  { bottom: '140px', right: '6%' },  // Right bottom
 ];
 
-// Dealer button offsets
+// Dealer button offsets - adjusted for larger table
 const dealerButtonOffsets = [
-  { bottom: '88px', left: 'calc(50% + 72px)' },
-  { bottom: '175px', left: 'calc(4% + 135px)' },
-  { top: '158px', left: 'calc(4% + 135px)' },
-  { top: '88px', left: 'calc(50% + 72px)' },
-  { top: '158px', right: 'calc(4% + 135px)' },
-  { bottom: '175px', right: 'calc(4% + 135px)' },
+  { bottom: '95px', left: 'calc(50% + 75px)' },
+  { bottom: '200px', left: 'calc(6% + 140px)' },
+  { top: '180px', left: 'calc(6% + 140px)' },
+  { top: '95px', left: 'calc(50% + 75px)' },
+  { top: '180px', right: 'calc(6% + 140px)' },
+  { bottom: '200px', right: 'calc(6% + 140px)' },
 ];
 
 export default function PokerTable() {
@@ -966,8 +982,17 @@ export default function PokerTable() {
         {/* Game Log */}
         {gameState?.log && gameState.log.length > 0 && (
           <div style={styles.gameLog}>
-            {gameState.log.slice(-10).map((entry, index) => (
-              <div key={index} style={styles.logEntry}>{entry}</div>
+            <div style={styles.logHeader}>Game History</div>
+            {gameState.log.slice(-15).map((entry, index, arr) => (
+              <div
+                key={index}
+                style={{
+                  ...styles.logEntry,
+                  ...(index === arr.length - 1 ? styles.logEntryLatest : {})
+                }}
+              >
+                {entry}
+              </div>
             ))}
           </div>
         )}
