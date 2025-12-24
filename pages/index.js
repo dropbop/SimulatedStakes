@@ -689,12 +689,14 @@ export default function PokerTable() {
   // Initialize game on mount
   useEffect(() => {
     const newGame = new PokerGame(6);
+    newGame.setAutoProcessAI(false); // UI controls AI timing for visible delays
     setGame(newGame);
   }, []);
 
   // Start a completely new game
   const startNewGame = useCallback(() => {
     const newGame = new PokerGame(6);
+    newGame.setAutoProcessAI(false); // UI controls AI timing for visible delays
     setGame(newGame);
     setGameState(null);
     setBetAmount(20);
@@ -721,23 +723,24 @@ export default function PokerTable() {
       setBetAmount(state.minRaise * 2);
 
       // Check if first player is AI and process with delays
-      const currentPlayer = state.players[state.currentPlayer];
-      if (currentPlayer && !currentPlayer.isHuman && state.phase !== 'endHand') {
-        // AI goes first - use delayed processing
-        const checkAndProcess = () => {
-          const newState = game.getState();
-          setGameState(newState);
+      if (game.isAITurn()) {
+        // AI goes first - process each AI turn with visible delays
+        const processNextAI = () => {
+          if (game.isAITurn()) {
+            const moreAITurns = game.processOneAITurn();
+            setGameState(game.getState());
 
-          const nextPlayer = newState.players[newState.currentPlayer];
-          const isActiveGame = newState.phase !== 'endHand' && newState.phase !== 'gameOver';
-
-          if (nextPlayer && !nextPlayer.isHuman && isActiveGame && !nextPlayer.eliminated) {
-            setTimeout(checkAndProcess, delay);
+            if (moreAITurns) {
+              setTimeout(processNextAI, delay);
+            } else {
+              setIsProcessing(false);
+            }
           } else {
+            setGameState(game.getState());
             setIsProcessing(false);
           }
         };
-        setTimeout(checkAndProcess, delay);
+        setTimeout(processNextAI, delay);
       } else {
         setIsProcessing(false);
       }
@@ -751,23 +754,30 @@ export default function PokerTable() {
   const processWithAIDelays = useCallback(() => {
     const delay = getDelay();
 
-    const checkAndProcess = () => {
-      const state = game.getState();
-      setGameState(state);
+    const processNextAI = () => {
+      // Check if it's an AI's turn
+      if (game.isAITurn()) {
+        // Process one AI move
+        const moreAITurns = game.processOneAITurn();
+        // Update state to show this AI's action
+        setGameState(game.getState());
 
-      const currentPlayer = state.players[state.currentPlayer];
-      const isActiveGame = state.phase !== 'endHand' && state.phase !== 'gameOver';
-
-      // If it's still AI's turn and game is active, wait and check again
-      if (currentPlayer && !currentPlayer.isHuman && isActiveGame && !currentPlayer.eliminated) {
-        setTimeout(checkAndProcess, delay);
+        if (moreAITurns) {
+          // More AI players to process - wait and continue
+          setTimeout(processNextAI, delay);
+        } else {
+          // No more AI turns - either human's turn or hand ended
+          setIsProcessing(false);
+        }
       } else {
+        // Not AI's turn - update state and stop processing
+        setGameState(game.getState());
         setIsProcessing(false);
       }
     };
 
-    // Initial delay after human action (slightly shorter)
-    setTimeout(checkAndProcess, Math.floor(delay * 0.6));
+    // Initial delay after human action before first AI moves
+    setTimeout(processNextAI, Math.floor(delay * 0.6));
   }, [game, getDelay]);
 
   // Player action handlers
