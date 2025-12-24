@@ -772,6 +772,23 @@ export default function PokerTable() {
     setIsProcessing(false);
   }, []);
 
+  // Keep betAmount in sync with minRaise when gameState changes
+  useEffect(() => {
+    if (gameState && gameState.minRaise) {
+      const player = gameState.players.find(p => p.isHuman);
+      if (player) {
+        const toCall = gameState.currentBet - player.currentBet;
+        const maxRaise = player.chips - toCall;
+        // Clamp betAmount to valid range [minRaise, maxRaise]
+        setBetAmount(prev => {
+          if (prev < gameState.minRaise) return gameState.minRaise;
+          if (prev > maxRaise) return Math.max(gameState.minRaise, maxRaise);
+          return prev;
+        });
+      }
+    }
+  }, [gameState?.minRaise, gameState?.currentBet]);
+
   // Get current delay based on animation speed setting
   const getDelay = useCallback(() => SPEED_OPTIONS[animationSpeed].delay, [animationSpeed]);
 
