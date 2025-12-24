@@ -62,6 +62,17 @@ const globalStyles = `
     100% { background-position: 200% center; }
   }
 
+  @keyframes dialogueFadeIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .dialogue-bubble {
+    animation: dialogueFadeIn 4s ease-out forwards;
+  }
+
   /* Button hover effects */
   .poker-btn {
     position: relative;
@@ -649,6 +660,36 @@ const styles = {
   statusMessageSecondary: {
     color: 'rgba(200, 195, 185, 0.6)',
   },
+  // Dialogue bubble styles
+  dialogueBubble: {
+    position: 'absolute',
+    background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
+    border: '1px solid rgba(201, 162, 39, 0.35)',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    maxWidth: '200px',
+    zIndex: 100,
+    boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(8px)',
+  },
+  dialogueCharacter: {
+    fontSize: '0.7rem',
+    color: 'rgba(201, 162, 39, 0.8)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    marginBottom: '4px',
+    fontWeight: '500',
+  },
+  dialogueLine: {
+    fontSize: '0.85rem',
+    color: 'rgba(232, 224, 213, 0.95)',
+    lineHeight: '1.4',
+    fontFamily: "'Cormorant Garamond', Georgia, serif",
+  },
+  dialogueLineAction: {
+    fontStyle: 'italic',
+    color: 'rgba(200, 195, 185, 0.8)',
+  },
 };
 
 // Player positions around the table (6 players) - spread out for larger table
@@ -671,6 +712,16 @@ const dealerButtonOffsets = [
   { bottom: '200px', right: 'calc(6% + 140px)' },
 ];
 
+// Dialogue bubble positions (offset from player positions)
+const dialoguePositions = [
+  { bottom: '160px', left: '50%', transform: 'translateX(-50%)' },  // Player (above)
+  { bottom: '200px', left: 'calc(6% + 145px)' },   // Left bottom (right of player)
+  { top: '160px', left: 'calc(6% + 145px)' },      // Left top (right of player)
+  { top: '85px', left: '50%', transform: 'translateX(-50%)' },  // Top center (below)
+  { top: '160px', right: 'calc(6% + 145px)' },     // Right top (left of player)
+  { bottom: '200px', right: 'calc(6% + 145px)' },  // Right bottom (left of player)
+];
+
 // Animation speed settings (ms between AI moves)
 const SPEED_OPTIONS = {
   slow: { label: 'Slow', delay: 2000 },
@@ -685,6 +736,8 @@ export default function PokerTable() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState('normal');
+  const [currentDialogue, setCurrentDialogue] = useState(null);
+  const [dialogueKey, setDialogueKey] = useState(0); // For forcing re-animation
 
   // Initialize game on mount
   useEffect(() => {
@@ -692,6 +745,21 @@ export default function PokerTable() {
     newGame.setAutoProcessAI(false); // UI controls AI timing for visible delays
     setGame(newGame);
   }, []);
+
+  // Handle dialogue display from game state
+  useEffect(() => {
+    if (gameState?.pendingDialogue && gameState.pendingDialogue !== currentDialogue) {
+      setCurrentDialogue(gameState.pendingDialogue);
+      setDialogueKey(prev => prev + 1); // Force re-animation
+
+      // Auto-dismiss after 4 seconds (matches animation duration)
+      const timer = setTimeout(() => {
+        setCurrentDialogue(null);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.pendingDialogue]);
 
   // Start a completely new game
   const startNewGame = useCallback(() => {
@@ -868,6 +936,44 @@ export default function PokerTable() {
     );
   };
 
+  // Render dialogue bubble
+  const renderDialogueBubble = () => {
+    if (!currentDialogue || !gameState) return null;
+
+    // Find player index by character name
+    const playerIndex = gameState.players.findIndex(p => p.name === currentDialogue.character);
+    if (playerIndex === -1) return null;
+
+    const position = dialoguePositions[playerIndex];
+    const isAction = currentDialogue.isAction || currentDialogue.line.startsWith('*');
+
+    // Parse the line to separate action from speech
+    let displayLine = currentDialogue.line;
+    if (isAction && !displayLine.includes('"')) {
+      // Pure action like "*silent*"
+      displayLine = displayLine.replace(/^\*|\*$/g, '');
+    }
+
+    return (
+      <div
+        key={dialogueKey}
+        className="dialogue-bubble"
+        style={{
+          ...styles.dialogueBubble,
+          ...position,
+        }}
+      >
+        <div style={styles.dialogueCharacter}>{currentDialogue.character}</div>
+        <div style={{
+          ...styles.dialogueLine,
+          ...(isAction && !currentDialogue.line.includes('"') ? styles.dialogueLineAction : {}),
+        }}>
+          {displayLine}
+        </div>
+      </div>
+    );
+  };
+
   // Render a player
   const renderPlayer = (player, index) => {
     if (!gameState) return null;
@@ -1040,6 +1146,9 @@ export default function PokerTable() {
 
           {/* Players */}
           {gameState?.players.map((player, index) => renderPlayer(player, index))}
+
+          {/* Dialogue bubble */}
+          {renderDialogueBubble()}
         </div>
 
         {/* Status message */}
