@@ -73,6 +73,17 @@ const globalStyles = `
     animation: dialogueFadeIn 4s ease-out forwards;
   }
 
+  @keyframes actionPopup {
+    0% { opacity: 0; transform: translateY(5px) scale(0.9); }
+    15% { opacity: 1; transform: translateY(0) scale(1); }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .action-popup {
+    animation: actionPopup 2s ease-out forwards;
+  }
+
   /* Button hover effects */
   .poker-btn {
     position: relative;
@@ -739,6 +750,8 @@ export default function PokerTable() {
   const [showWinnerHand, setShowWinnerHand] = useState(true);
   const [currentDialogue, setCurrentDialogue] = useState(null);
   const [dialogueKey, setDialogueKey] = useState(0); // For forcing re-animation
+  const [currentAction, setCurrentAction] = useState(null);
+  const [actionKey, setActionKey] = useState(0); // For forcing re-animation
 
   // Initialize game on mount
   useEffect(() => {
@@ -761,6 +774,21 @@ export default function PokerTable() {
       return () => clearTimeout(timer);
     }
   }, [gameState?.pendingDialogue]);
+
+  // Handle action popup display from game state
+  useEffect(() => {
+    if (gameState?.lastAction) {
+      setCurrentAction(gameState.lastAction);
+      setActionKey(prev => prev + 1); // Force re-animation
+
+      // Auto-dismiss after 2 seconds (matches animation duration)
+      const timer = setTimeout(() => {
+        setCurrentAction(null);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.lastAction?.playerIndex, gameState?.lastAction?.action]);
 
   // Start a completely new game
   const startNewGame = useCallback(() => {
@@ -992,6 +1020,54 @@ export default function PokerTable() {
     );
   };
 
+  // Render action popup
+  const renderActionPopup = () => {
+    if (!currentAction || !gameState) return null;
+
+    const position = dialoguePositions[currentAction.playerIndex];
+
+    // Format action text
+    let actionText;
+    if (currentAction.action === 'raise') {
+      actionText = `Raise $${currentAction.amount?.toLocaleString()}`;
+    } else if (currentAction.action === 'call') {
+      actionText = `Call $${currentAction.amount?.toLocaleString()}`;
+    } else {
+      actionText = currentAction.action.charAt(0).toUpperCase() + currentAction.action.slice(1);
+    }
+
+    // Color based on action type
+    const actionColors = {
+      fold: '#ef4444',    // red
+      check: '#3b82f6',   // blue
+      call: '#22c55e',    // green
+      raise: '#c9a227',   // gold
+    };
+    const color = actionColors[currentAction.action] || '#ffffff';
+
+    return (
+      <div
+        key={actionKey}
+        className="action-popup"
+        style={{
+          position: 'absolute',
+          ...position,
+          background: 'rgba(0,0,0,0.9)',
+          border: `2px solid ${color}`,
+          borderRadius: '6px',
+          padding: '8px 14px',
+          color: color,
+          fontWeight: '600',
+          fontSize: '14px',
+          zIndex: 90,
+          pointerEvents: 'none',
+        }}
+      >
+        {actionText}
+      </div>
+    );
+  };
+
   // Render a player
   const renderPlayer = (player, index) => {
     if (!gameState) return null;
@@ -1194,6 +1270,9 @@ export default function PokerTable() {
 
           {/* Dialogue bubble */}
           {renderDialogueBubble()}
+
+          {/* Action popup */}
+          {renderActionPopup()}
         </div>
 
         {/* Status message */}
