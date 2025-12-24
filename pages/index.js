@@ -2,51 +2,281 @@ import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { PokerGame } from '../lib/gameLogic';
 
-// Casino Royale themed styles
+// Global CSS for custom scrollbar and animations
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #c9a227 0%, #8b7355 100%);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37 0%, #a08060 100%);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9a227 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Keyframe animations */
+  @keyframes subtleGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(201, 162, 39, 0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+    50% { box-shadow: 0 0 30px rgba(201, 162, 39, 0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+  }
+
+  @keyframes cardAppear {
+    0% { opacity: 0; transform: translateY(-10px) rotateX(15deg); }
+    100% { opacity: 1; transform: translateY(0) rotateX(0); }
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes pulseGold {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Button hover effects */
+  .poker-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .poker-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s;
+  }
+
+  .poker-btn:hover::before {
+    left: 100%;
+  }
+
+  .poker-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .poker-btn:active {
+    transform: translateY(0);
+  }
+
+  /* Card animations */
+  .card-animate {
+    animation: cardAppear 0.4s ease-out forwards;
+  }
+
+  /* Current player glow */
+  .current-player {
+    animation: subtleGlow 2s ease-in-out infinite;
+  }
+
+  /* Slider styling */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
+    border-radius: 2px;
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37 0%, #c9a227 50%, #8b7355 100%);
+    margin-top: -7px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    border: 2px solid #0a0a0a;
+    transition: transform 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
+    border-radius: 2px;
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37 0%, #c9a227 50%, #8b7355 100%);
+    border: 2px solid #0a0a0a;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+`;
+
+// Casino Royale themed styles - Refined & Cinematic
 const styles = {
   container: {
     minHeight: '100vh',
-    padding: '20px',
+    padding: '24px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
-    color: '#f0e6d3',
-    fontFamily: "'Georgia', 'Times New Roman', serif",
+    background: `
+      radial-gradient(ellipse at 50% 0%, rgba(20, 30, 48, 0.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(30, 20, 15, 0.6) 0%, transparent 40%),
+      radial-gradient(ellipse at 20% 80%, rgba(15, 25, 20, 0.6) 0%, transparent 40%),
+      linear-gradient(180deg, #0a0b0d 0%, #0d0e12 50%, #08090a 100%)
+    `,
+    color: '#e8e0d5',
+    fontFamily: "'Outfit', -apple-system, sans-serif",
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  // Subtle film grain overlay
+  grainOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+    opacity: 0.03,
+    background: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+    zIndex: 1000,
+  },
+  // Vignette effect
+  vignette: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+    background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.4) 100%)',
+    zIndex: 999,
   },
   header: {
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '28px',
+    position: 'relative',
+    zIndex: 1,
+  },
+  titleWrapper: {
+    position: 'relative',
+    display: 'inline-block',
   },
   title: {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    color: '#d4af37',
-    textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-    letterSpacing: '3px',
-    marginBottom: '5px',
+    fontSize: 'clamp(2rem, 5vw, 3rem)',
+    fontFamily: "'Cormorant Garamond', Georgia, serif",
+    fontWeight: '600',
+    color: '#c9a227',
+    textShadow: '0 2px 20px rgba(201, 162, 39, 0.3), 0 1px 0 rgba(0,0,0,0.8)',
+    letterSpacing: '0.25em',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+  },
+  titleAccent: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '120%',
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.3), transparent)',
+    zIndex: -1,
   },
   subtitle: {
-    fontSize: '1rem',
-    color: '#888',
-    fontStyle: 'italic',
+    fontSize: '0.85rem',
+    color: 'rgba(200, 195, 185, 0.6)',
+    fontWeight: '300',
+    letterSpacing: '0.35em',
+    textTransform: 'uppercase',
   },
   main: {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
     maxWidth: '1000px',
+    position: 'relative',
+    zIndex: 1,
   },
   table: {
     position: 'relative',
-    height: '500px',
+    height: '520px',
     margin: '0 auto',
     width: '100%',
     maxWidth: '900px',
-    background: 'radial-gradient(ellipse at center, #1e5631 0%, #0d3320 70%, #0a2818 100%)',
-    borderRadius: '200px',
-    border: '12px solid #3d2914',
-    boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.3)',
+    background: `
+      radial-gradient(ellipse at 50% 30%, rgba(35, 90, 55, 0.95) 0%, rgba(20, 60, 35, 0.95) 40%, rgba(12, 40, 25, 0.98) 70%, rgba(8, 28, 18, 1) 100%)
+    `,
+    borderRadius: '50%',
+    border: '10px solid #1a1410',
+    boxShadow: `
+      0 0 0 3px rgba(139, 90, 43, 0.4),
+      0 0 0 12px #0d0a08,
+      0 0 0 14px rgba(139, 90, 43, 0.2),
+      inset 0 0 100px rgba(0,0,0,0.5),
+      0 25px 80px rgba(0,0,0,0.8)
+    `,
+  },
+  tableRail: {
+    position: 'absolute',
+    top: '-2px',
+    left: '-2px',
+    right: '-2px',
+    bottom: '-2px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, rgba(80, 50, 30, 0.3) 0%, transparent 50%, rgba(40, 25, 15, 0.3) 100%)',
+    pointerEvents: 'none',
+  },
+  feltTexture: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: '50%',
+    opacity: 0.4,
+    background: `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='felt'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23felt)'/%3E%3C/svg%3E")`,
+    mixBlendMode: 'overlay',
+    pointerEvents: 'none',
   },
   communityCards: {
     position: 'absolute',
@@ -54,31 +284,35 @@ const styles = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     display: 'flex',
-    gap: '8px',
+    gap: '10px',
+    perspective: '1000px',
   },
   pot: {
     position: 'absolute',
-    top: '35%',
+    top: '32%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    fontSize: '1.1rem',
-    fontWeight: 'bold',
-    color: '#d4af37',
-    textShadow: '1px 1px 3px rgba(0,0,0,0.7)',
-    background: 'rgba(0,0,0,0.4)',
-    padding: '8px 16px',
-    borderRadius: '20px',
-    border: '1px solid #d4af37',
+    fontSize: '1rem',
+    fontWeight: '500',
+    color: '#c9a227',
+    textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+    background: 'linear-gradient(180deg, rgba(10, 10, 10, 0.85) 0%, rgba(5, 5, 5, 0.9) 100%)',
+    padding: '10px 24px',
+    borderRadius: '24px',
+    border: '1px solid rgba(201, 162, 39, 0.25)',
+    backdropFilter: 'blur(8px)',
+    letterSpacing: '0.1em',
   },
   phaseIndicator: {
     position: 'absolute',
-    top: '25%',
+    top: '22%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    fontSize: '0.9rem',
-    color: '#aaa',
+    fontSize: '0.7rem',
+    color: 'rgba(200, 195, 185, 0.5)',
     textTransform: 'uppercase',
-    letterSpacing: '2px',
+    letterSpacing: '0.3em',
+    fontWeight: '400',
   },
   playerPosition: {
     position: 'absolute',
@@ -86,197 +320,256 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    transition: 'all 0.3s ease',
   },
   playerInfo: {
-    background: 'rgba(0,0,0,0.7)',
-    padding: '10px 15px',
-    borderRadius: '10px',
+    background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
+    padding: '12px 18px',
+    borderRadius: '12px',
     textAlign: 'center',
-    border: '1px solid #333',
-    minWidth: '120px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    minWidth: '125px',
+    backdropFilter: 'blur(12px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
   playerInfoCurrent: {
-    border: '2px solid #d4af37',
-    boxShadow: '0 0 15px rgba(212, 175, 55, 0.5)',
+    border: '1px solid rgba(201, 162, 39, 0.5)',
+    boxShadow: '0 0 25px rgba(201, 162, 39, 0.25), 0 8px 32px rgba(0,0,0,0.4)',
   },
   playerInfoFolded: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
   playerInfoEliminated: {
-    opacity: 0.3,
-    filter: 'grayscale(100%)',
+    opacity: 0.25,
+    filter: 'grayscale(80%)',
   },
   playerName: {
-    marginBottom: '4px',
-    fontWeight: 'bold',
-    fontSize: '0.95rem',
-    color: '#f0e6d3',
+    marginBottom: '5px',
+    fontWeight: '500',
+    fontSize: '0.9rem',
+    color: '#e8e0d5',
+    letterSpacing: '0.02em',
   },
   playerChips: {
     fontSize: '0.85rem',
-    color: '#d4af37',
+    color: '#c9a227',
+    fontWeight: '500',
+    fontFamily: "'Outfit', sans-serif",
   },
   playerBet: {
-    fontSize: '0.8rem',
-    color: '#88c999',
-    marginTop: '2px',
+    fontSize: '0.75rem',
+    color: '#6dba82',
+    marginTop: '4px',
+    fontWeight: '400',
   },
   dealerButton: {
     position: 'absolute',
-    width: '24px',
-    height: '24px',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #fff 0%, #ccc 100%)',
-    color: '#000',
-    fontSize: '10px',
-    fontWeight: 'bold',
+    background: 'linear-gradient(145deg, #f5f5f0 0%, #d4d0c8 50%, #b8b4ac 100%)',
+    color: '#1a1a1a',
+    fontSize: '9px',
+    fontWeight: '700',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-    border: '2px solid #333',
+    boxShadow: '0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8)',
+    border: 'none',
+    letterSpacing: '0.05em',
   },
   card: {
-    width: '50px',
-    height: '70px',
-    background: 'linear-gradient(135deg, #fff 0%, #f5f5f5 100%)',
-    borderRadius: '5px',
-    border: '1px solid #999',
+    width: '52px',
+    height: '72px',
+    background: 'linear-gradient(145deg, #ffffff 0%, #f8f6f3 50%, #ebe8e4 100%)',
+    borderRadius: '6px',
+    border: 'none',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: '1.1rem',
-    fontWeight: 'bold',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+    fontSize: '1.05rem',
+    fontWeight: '600',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)',
+    fontFamily: "'Outfit', sans-serif",
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    position: 'relative',
+  },
+  cardHover: {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.2)',
   },
   cardRed: {
-    color: '#c41e3a',
+    color: '#b91c1c',
   },
   cardBlack: {
-    color: '#1a1a1a',
+    color: '#171717',
   },
   cardBack: {
-    background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
-    border: '2px solid #d4af37',
+    background: `
+      linear-gradient(135deg, #1a2744 0%, #0f1829 50%, #0a1018 100%)
+    `,
+    border: '2px solid rgba(201, 162, 39, 0.4)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4), inset 0 0 20px rgba(201, 162, 39, 0.1)',
+  },
+  cardBackPattern: {
+    position: 'absolute',
+    top: '4px',
+    left: '4px',
+    right: '4px',
+    bottom: '4px',
+    borderRadius: '3px',
+    border: '1px solid rgba(201, 162, 39, 0.2)',
+    background: `
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(201, 162, 39, 0.05) 3px,
+        rgba(201, 162, 39, 0.05) 6px
+      )
+    `,
   },
   cardPlaceholder: {
-    background: 'rgba(255,255,255,0.1)',
-    border: '2px dashed rgba(255,255,255,0.2)',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px dashed rgba(255,255,255,0.1)',
+    boxShadow: 'none',
   },
   holeCards: {
     display: 'flex',
-    gap: '4px',
-    marginTop: '8px',
+    gap: '5px',
+    marginTop: '10px',
   },
   controls: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    marginTop: '20px',
-    gap: '15px',
+    marginTop: '24px',
+    gap: '18px',
   },
   buttonRow: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '10px',
+    gap: '12px',
     flexWrap: 'wrap',
   },
   button: {
-    padding: '12px 24px',
-    fontSize: '1rem',
-    fontWeight: 'bold',
-    borderRadius: '5px',
+    padding: '14px 28px',
+    fontSize: '0.85rem',
+    fontWeight: '500',
+    borderRadius: '8px',
     cursor: 'pointer',
     border: 'none',
     textTransform: 'uppercase',
-    letterSpacing: '1px',
-    transition: 'all 0.2s ease',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-    cursor: 'not-allowed',
+    letterSpacing: '0.15em',
+    fontFamily: "'Outfit', sans-serif",
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    overflow: 'hidden',
   },
   foldButton: {
-    background: 'linear-gradient(135deg, #8b0000 0%, #5c0000 100%)',
-    color: 'white',
+    background: 'linear-gradient(180deg, #7f1d1d 0%, #5c1515 100%)',
+    color: '#fecaca',
+    boxShadow: '0 4px 15px rgba(127, 29, 29, 0.3)',
   },
   checkButton: {
-    background: 'linear-gradient(135deg, #1e5631 0%, #0d3320 100%)',
-    color: 'white',
+    background: 'linear-gradient(180deg, #1a4d2e 0%, #0f3320 100%)',
+    color: '#a7dbb8',
+    boxShadow: '0 4px 15px rgba(26, 77, 46, 0.3)',
   },
   callButton: {
-    background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
-    color: 'white',
+    background: 'linear-gradient(180deg, #166534 0%, #0d4022 100%)',
+    color: '#bbf7d0',
+    boxShadow: '0 4px 15px rgba(22, 101, 52, 0.3)',
   },
   raiseButton: {
-    background: 'linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%)',
-    color: '#1a1a1a',
+    background: 'linear-gradient(180deg, #c9a227 0%, #a68520 50%, #8b7018 100%)',
+    color: '#0a0a0a',
+    boxShadow: '0 4px 15px rgba(201, 162, 39, 0.3)',
   },
   newHandButton: {
-    background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
-    color: '#d4af37',
-    border: '1px solid #d4af37',
+    background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+    color: '#c9a227',
+    border: '1px solid rgba(201, 162, 39, 0.3)',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
   },
   betControls: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    background: 'rgba(0,0,0,0.3)',
-    padding: '15px 25px',
-    borderRadius: '10px',
+    gap: '20px',
+    background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%)',
+    padding: '16px 28px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(8px)',
+  },
+  betLabel: {
+    color: 'rgba(200, 195, 185, 0.6)',
+    fontSize: '0.8rem',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
   },
   betSlider: {
-    width: '200px',
-    accentColor: '#d4af37',
+    width: '180px',
+    height: '20px',
   },
   betAmount: {
-    fontSize: '1.1rem',
-    color: '#d4af37',
-    fontWeight: 'bold',
-    minWidth: '80px',
+    fontSize: '1rem',
+    color: '#c9a227',
+    fontWeight: '500',
+    minWidth: '75px',
+    textAlign: 'right',
+    fontFamily: "'Outfit', sans-serif",
   },
   gameLog: {
-    marginTop: '20px',
-    padding: '15px',
-    background: 'rgba(0,0,0,0.5)',
-    borderRadius: '10px',
-    maxHeight: '150px',
+    marginTop: '24px',
+    padding: '16px 20px',
+    background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.9) 0%, rgba(5, 5, 7, 0.95) 100%)',
+    borderRadius: '12px',
+    maxHeight: '140px',
     overflowY: 'auto',
     width: '100%',
-    maxWidth: '600px',
-    border: '1px solid #333',
+    maxWidth: '550px',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    backdropFilter: 'blur(8px)',
   },
   logEntry: {
-    margin: '4px 0',
-    fontSize: '0.85rem',
-    color: '#aaa',
+    margin: '6px 0',
+    fontSize: '0.8rem',
+    color: 'rgba(200, 195, 185, 0.55)',
+    lineHeight: '1.4',
   },
   statusMessage: {
     textAlign: 'center',
     padding: '20px',
-    fontSize: '1.2rem',
-    color: '#d4af37',
+    fontSize: '1.05rem',
+    color: 'rgba(201, 162, 39, 0.9)',
+    fontWeight: '400',
+    letterSpacing: '0.05em',
+  },
+  statusMessageSecondary: {
+    color: 'rgba(200, 195, 185, 0.6)',
   },
 };
 
 // Player positions around the table (6 players)
 const playerPositions = [
-  { bottom: '10px', left: '50%', transform: 'translateX(-50%)' }, // Player (bottom center)
-  { bottom: '120px', left: '5%' },   // Left bottom
-  { top: '80px', left: '5%' },       // Left top
-  { top: '10px', left: '50%', transform: 'translateX(-50%)' },    // Top center
-  { top: '80px', right: '5%' },      // Right top
-  { bottom: '120px', right: '5%' },  // Right bottom
+  { bottom: '8px', left: '50%', transform: 'translateX(-50%)' },
+  { bottom: '115px', left: '4%' },
+  { top: '80px', left: '4%' },
+  { top: '8px', left: '50%', transform: 'translateX(-50%)' },
+  { top: '80px', right: '4%' },
+  { bottom: '115px', right: '4%' },
 ];
 
 // Dealer button offsets
 const dealerButtonOffsets = [
-  { bottom: '90px', left: 'calc(50% + 70px)' },
-  { bottom: '180px', left: 'calc(5% + 130px)' },
-  { top: '160px', left: 'calc(5% + 130px)' },
-  { top: '90px', left: 'calc(50% + 70px)' },
-  { top: '160px', right: 'calc(5% + 130px)' },
-  { bottom: '180px', right: 'calc(5% + 130px)' },
+  { bottom: '88px', left: 'calc(50% + 72px)' },
+  { bottom: '175px', left: 'calc(4% + 135px)' },
+  { top: '158px', left: 'calc(4% + 135px)' },
+  { top: '88px', left: 'calc(50% + 72px)' },
+  { top: '158px', right: 'calc(4% + 135px)' },
+  { bottom: '175px', right: 'calc(4% + 135px)' },
 ];
 
 export default function PokerTable() {
@@ -302,10 +595,8 @@ export default function PokerTable() {
 
   // Start a new hand
   const startNewHand = useCallback(() => {
-    console.log('startNewHand called', { game: !!game, isProcessing });
     if (!game) return;
     if (isProcessing) {
-      console.log('Blocked by isProcessing, forcing reset');
       setIsProcessing(false);
       return;
     }
@@ -319,7 +610,6 @@ export default function PokerTable() {
       console.error('startNewHand error:', error);
     }
 
-    // Small delay to let AI actions complete
     setTimeout(() => {
       setGameState(game.getState());
       setIsProcessing(false);
@@ -330,9 +620,7 @@ export default function PokerTable() {
   const handleFold = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
-
     game.fold();
-
     setTimeout(() => {
       setGameState(game.getState());
       setIsProcessing(false);
@@ -342,9 +630,7 @@ export default function PokerTable() {
   const handleCheck = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
-
     game.check();
-
     setTimeout(() => {
       setGameState(game.getState());
       setIsProcessing(false);
@@ -354,9 +640,7 @@ export default function PokerTable() {
   const handleCall = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
-
     game.call();
-
     setTimeout(() => {
       setGameState(game.getState());
       setIsProcessing(false);
@@ -366,13 +650,11 @@ export default function PokerTable() {
   const handleRaise = useCallback(() => {
     if (!game || isProcessing || !gameState) return;
     setIsProcessing(true);
-
     try {
       game.raise(betAmount);
     } catch (error) {
       console.error('Raise error:', error.message);
     }
-
     setTimeout(() => {
       setGameState(game.getState());
       setIsProcessing(false);
@@ -383,13 +665,23 @@ export default function PokerTable() {
   const renderCard = (card, index, isHidden = false) => {
     if (!card) {
       return (
-        <div key={index} style={{ ...styles.card, ...styles.cardPlaceholder }} />
+        <div
+          key={index}
+          style={{ ...styles.card, ...styles.cardPlaceholder }}
+          className="card-animate"
+        />
       );
     }
 
     if (isHidden) {
       return (
-        <div key={index} style={{ ...styles.card, ...styles.cardBack }} />
+        <div
+          key={index}
+          style={{ ...styles.card, ...styles.cardBack }}
+          className="card-animate"
+        >
+          <div style={styles.cardBackPattern} />
+        </div>
       );
     }
 
@@ -399,8 +691,10 @@ export default function PokerTable() {
         key={index}
         style={{
           ...styles.card,
-          ...(isRed ? styles.cardRed : styles.cardBlack)
+          ...(isRed ? styles.cardRed : styles.cardBlack),
+          animationDelay: `${index * 0.1}s`
         }}
+        className="card-animate"
       >
         {card.toString()}
       </div>
@@ -438,29 +732,26 @@ export default function PokerTable() {
 
     return (
       <div key={player.id} style={{ ...styles.playerPosition, ...position }}>
-        <div style={playerStyle}>
+        <div style={playerStyle} className={isCurrent ? 'current-player' : ''}>
           <div style={styles.playerName}>
             {player.name}
             {player.eliminated && ' (OUT)'}
             {!player.eliminated && player.folded && ' (Folded)'}
             {player.allIn && ' (All-In)'}
           </div>
-          <div style={styles.playerChips}>${player.chips}</div>
+          <div style={styles.playerChips}>${player.chips.toLocaleString()}</div>
           {player.currentBet > 0 && (
-            <div style={styles.playerBet}>Bet: ${player.currentBet}</div>
+            <div style={styles.playerBet}>Bet: ${player.currentBet.toLocaleString()}</div>
           )}
         </div>
 
         {/* Hole cards */}
         <div style={styles.holeCards}>
           {player.hand ? (
-            // Human player - show cards
             player.hand.map((card, i) => renderCard(card, i))
           ) : player.isHuman ? (
-            // Human but no cards yet
             null
-          ) : !player.folded ? (
-            // AI player - show card backs
+          ) : !player.folded && !player.eliminated ? (
             <>
               {renderCard({}, 0, true)}
               {renderCard({}, 1, true)}
@@ -494,43 +785,56 @@ export default function PokerTable() {
 
   // Determine what message to show
   const getStatusMessage = () => {
-    if (!gameState) return 'Click "Deal New Hand" to start playing';
+    if (!gameState) return { main: 'Deal cards to begin', secondary: 'The game awaits' };
     if (gameState.phase === 'gameOver' || gameState.isGameOver) {
       const winner = gameState.players.find(p => !p.eliminated);
-      if (winner?.isHuman) return 'Congratulations! You win the tournament!';
-      return `${winner?.name || 'Someone'} wins the tournament!`;
+      if (winner?.isHuman) return { main: 'Victory', secondary: 'You have won the tournament' };
+      return { main: `${winner?.name || 'Unknown'} wins`, secondary: 'Tournament complete' };
     }
-    if (gameState.phase === 'endHand') return 'Hand complete! Deal a new hand to continue.';
-    if (currentPlayer?.isHuman && actions.length > 0) return 'Your turn - choose an action';
-    return 'Waiting...';
+    if (gameState.phase === 'endHand') return { main: 'Hand complete', secondary: 'Deal the next hand to continue' };
+    if (currentPlayer?.isHuman && actions.length > 0) return { main: 'Your move', secondary: 'Choose your action wisely' };
+    return { main: 'In play', secondary: 'Waiting for opponents' };
   };
 
+  const statusMessage = getStatusMessage();
   const isGameOver = gameState?.phase === 'gameOver' || gameState?.isGameOver;
 
   return (
     <div style={styles.container}>
+      <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+      <div style={styles.grainOverlay} />
+      <div style={styles.vignette} />
+
       <Head>
-        <title>Casino Royale Poker</title>
+        <title>Casino Royale</title>
         <meta name="description" content="A Casino Royale themed poker game" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
 
-      <div style={styles.header}>
-        <h1 style={styles.title}>CASINO ROYALE</h1>
-        <div style={styles.subtitle}>Montenegro • Texas Hold'em</div>
-      </div>
+      <header style={styles.header}>
+        <div style={styles.titleWrapper}>
+          <h1 style={styles.title}>Casino Royale</h1>
+          <div style={styles.titleAccent} />
+        </div>
+        <div style={styles.subtitle}>Montenegro</div>
+      </header>
 
       <main style={styles.main}>
         <div style={styles.table}>
+          <div style={styles.tableRail} />
+          <div style={styles.feltTexture} />
+
           {/* Phase indicator */}
           {gameState && (
             <div style={styles.phaseIndicator}>
-              {gameState.phase === 'endHand' ? 'Hand Complete' : gameState.phase}
+              {gameState.phase === 'endHand' ? 'Complete' : gameState.phase}
             </div>
           )}
 
           {/* Pot */}
           <div style={styles.pot}>
-            Pot: ${gameState?.pot || 0}
+            Pot ${(gameState?.pot || 0).toLocaleString()}
           </div>
 
           {/* Community cards */}
@@ -542,7 +846,10 @@ export default function PokerTable() {
 
         {/* Status message */}
         <div style={styles.statusMessage}>
-          {getStatusMessage()}
+          <div>{statusMessage.main}</div>
+          <div style={{ ...styles.statusMessage, ...styles.statusMessageSecondary, fontSize: '0.85rem', padding: '4px' }}>
+            {statusMessage.secondary}
+          </div>
         </div>
 
         {/* Controls */}
@@ -550,21 +857,27 @@ export default function PokerTable() {
           {/* Game over - New Game button */}
           {isGameOver && (
             <button
+              className="poker-btn"
               style={{ ...styles.button, ...styles.raiseButton }}
               onClick={startNewGame}
             >
-              New Game
+              New Tournament
             </button>
           )}
 
           {/* New hand button */}
           {!isGameOver && (!gameState || gameState.phase === 'endHand') && (
             <button
-              style={{ ...styles.button, ...styles.newHandButton }}
+              className="poker-btn"
+              style={{
+                ...styles.button,
+                ...styles.newHandButton,
+                ...(isProcessing ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+              }}
               onClick={startNewHand}
               disabled={isProcessing}
             >
-              Deal New Hand
+              Deal Cards
             </button>
           )}
 
@@ -574,7 +887,12 @@ export default function PokerTable() {
               <div style={styles.buttonRow}>
                 {actions.includes('fold') && (
                   <button
-                    style={{ ...styles.button, ...styles.foldButton }}
+                    className="poker-btn"
+                    style={{
+                      ...styles.button,
+                      ...styles.foldButton,
+                      ...(isProcessing ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
                     onClick={handleFold}
                     disabled={isProcessing}
                   >
@@ -583,7 +901,12 @@ export default function PokerTable() {
                 )}
                 {actions.includes('check') && (
                   <button
-                    style={{ ...styles.button, ...styles.checkButton }}
+                    className="poker-btn"
+                    style={{
+                      ...styles.button,
+                      ...styles.checkButton,
+                      ...(isProcessing ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
                     onClick={handleCheck}
                     disabled={isProcessing}
                   >
@@ -592,20 +915,30 @@ export default function PokerTable() {
                 )}
                 {actions.includes('call') && (
                   <button
-                    style={{ ...styles.button, ...styles.callButton }}
+                    className="poker-btn"
+                    style={{
+                      ...styles.button,
+                      ...styles.callButton,
+                      ...(isProcessing ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
                     onClick={handleCall}
                     disabled={isProcessing}
                   >
-                    Call ${callAmount}
+                    Call ${callAmount.toLocaleString()}
                   </button>
                 )}
                 {actions.includes('raise') && (
                   <button
-                    style={{ ...styles.button, ...styles.raiseButton }}
+                    className="poker-btn"
+                    style={{
+                      ...styles.button,
+                      ...styles.raiseButton,
+                      ...(isProcessing ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                    }}
                     onClick={handleRaise}
                     disabled={isProcessing}
                   >
-                    Raise to ${gameState.currentBet + betAmount}
+                    Raise ${(gameState.currentBet + betAmount).toLocaleString()}
                   </button>
                 )}
               </div>
@@ -613,7 +946,7 @@ export default function PokerTable() {
               {/* Bet slider for raises */}
               {actions.includes('raise') && maxRaise > minRaise && (
                 <div style={styles.betControls}>
-                  <span style={{ color: '#888' }}>Raise:</span>
+                  <span style={styles.betLabel}>Raise</span>
                   <input
                     type="range"
                     min={minRaise}
@@ -623,7 +956,7 @@ export default function PokerTable() {
                     onChange={(e) => setBetAmount(parseInt(e.target.value))}
                     style={styles.betSlider}
                   />
-                  <span style={styles.betAmount}>${betAmount}</span>
+                  <span style={styles.betAmount}>${betAmount.toLocaleString()}</span>
                 </div>
               )}
             </>
