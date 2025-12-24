@@ -192,6 +192,75 @@ const styles = {
     background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.4) 100%)',
     zIndex: 999,
   },
+  settingsButton: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    background: 'linear-gradient(180deg, rgba(20, 20, 24, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%)',
+    border: '1px solid rgba(201, 162, 39, 0.25)',
+    color: 'rgba(201, 162, 39, 0.8)',
+    fontSize: '1.2rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1001,
+    transition: 'all 0.2s ease',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+  },
+  settingsPanel: {
+    position: 'fixed',
+    top: '75px',
+    right: '20px',
+    background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%)',
+    borderRadius: '12px',
+    border: '1px solid rgba(201, 162, 39, 0.2)',
+    padding: '20px',
+    zIndex: 1001,
+    minWidth: '200px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    backdropFilter: 'blur(10px)',
+  },
+  settingsTitle: {
+    fontSize: '0.75rem',
+    color: 'rgba(201, 162, 39, 0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.15em',
+    marginBottom: '16px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+  },
+  settingsLabel: {
+    fontSize: '0.85rem',
+    color: 'rgba(220, 215, 205, 0.8)',
+    marginBottom: '10px',
+    display: 'block',
+  },
+  settingsOptions: {
+    display: 'flex',
+    gap: '8px',
+  },
+  settingsOption: {
+    flex: 1,
+    padding: '10px 12px',
+    fontSize: '0.8rem',
+    fontWeight: '500',
+    borderRadius: '6px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.03)',
+    color: 'rgba(200, 195, 185, 0.7)',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    textAlign: 'center',
+  },
+  settingsOptionActive: {
+    background: 'rgba(201, 162, 39, 0.15)',
+    border: '1px solid rgba(201, 162, 39, 0.4)',
+    color: '#c9a227',
+  },
   header: {
     textAlign: 'center',
     marginBottom: '28px',
@@ -602,11 +671,20 @@ const dealerButtonOffsets = [
   { bottom: '200px', right: 'calc(6% + 140px)' },
 ];
 
+// Animation speed settings (ms between AI moves)
+const SPEED_OPTIONS = {
+  slow: { label: 'Slow', delay: 1200 },
+  normal: { label: 'Normal', delay: 800 },
+  fast: { label: 'Fast', delay: 500 },
+};
+
 export default function PokerTable() {
   const [game, setGame] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [betAmount, setBetAmount] = useState(20);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState('normal');
 
   // Initialize game on mount
   useEffect(() => {
@@ -623,6 +701,9 @@ export default function PokerTable() {
     setIsProcessing(false);
   }, []);
 
+  // Get current delay based on animation speed setting
+  const getDelay = useCallback(() => SPEED_OPTIONS[animationSpeed].delay, [animationSpeed]);
+
   // Start a new hand
   const startNewHand = useCallback(() => {
     if (!game) return;
@@ -632,6 +713,8 @@ export default function PokerTable() {
     }
 
     setIsProcessing(true);
+    const delay = getDelay();
+
     try {
       const state = game.startNewHand();
       setGameState(state);
@@ -649,12 +732,12 @@ export default function PokerTable() {
           const isActiveGame = newState.phase !== 'endHand' && newState.phase !== 'gameOver';
 
           if (nextPlayer && !nextPlayer.isHuman && isActiveGame && !nextPlayer.eliminated) {
-            setTimeout(checkAndProcess, 500);
+            setTimeout(checkAndProcess, delay);
           } else {
             setIsProcessing(false);
           }
         };
-        setTimeout(checkAndProcess, 500);
+        setTimeout(checkAndProcess, delay);
       } else {
         setIsProcessing(false);
       }
@@ -662,10 +745,12 @@ export default function PokerTable() {
       console.error('startNewHand error:', error);
       setIsProcessing(false);
     }
-  }, [game, isProcessing]);
+  }, [game, isProcessing, getDelay]);
 
   // Process AI turns with visible delays between each move
   const processWithAIDelays = useCallback(() => {
+    const delay = getDelay();
+
     const checkAndProcess = () => {
       const state = game.getState();
       setGameState(state);
@@ -675,15 +760,15 @@ export default function PokerTable() {
 
       // If it's still AI's turn and game is active, wait and check again
       if (currentPlayer && !currentPlayer.isHuman && isActiveGame && !currentPlayer.eliminated) {
-        setTimeout(checkAndProcess, 500); // 500ms delay between AI moves
+        setTimeout(checkAndProcess, delay);
       } else {
         setIsProcessing(false);
       }
     };
 
-    // Initial delay after human action
-    setTimeout(checkAndProcess, 300);
-  }, [game]);
+    // Initial delay after human action (slightly shorter)
+    setTimeout(checkAndProcess, Math.floor(delay * 0.6));
+  }, [game, getDelay]);
 
   // Player action handlers
   const handleFold = useCallback(() => {
@@ -861,6 +946,37 @@ export default function PokerTable() {
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
       <div style={styles.grainOverlay} />
       <div style={styles.vignette} />
+
+      {/* Settings Button */}
+      <button
+        style={styles.settingsButton}
+        onClick={() => setShowSettings(!showSettings)}
+        title="Settings"
+      >
+        ⚙
+      </button>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div style={styles.settingsPanel}>
+          <div style={styles.settingsTitle}>Settings</div>
+          <label style={styles.settingsLabel}>Animation Speed</label>
+          <div style={styles.settingsOptions}>
+            {Object.entries(SPEED_OPTIONS).map(([key, { label }]) => (
+              <button
+                key={key}
+                style={{
+                  ...styles.settingsOption,
+                  ...(animationSpeed === key ? styles.settingsOptionActive : {})
+                }}
+                onClick={() => setAnimationSpeed(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Head>
         <title>Casino Royale</title>
