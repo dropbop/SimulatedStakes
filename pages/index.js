@@ -736,6 +736,7 @@ export default function PokerTable() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState('normal');
+  const [showWinnerHand, setShowWinnerHand] = useState(true);
   const [currentDialogue, setCurrentDialogue] = useState(null);
   const [dialogueKey, setDialogueKey] = useState(0); // For forcing re-animation
 
@@ -1006,15 +1007,21 @@ export default function PokerTable() {
         {/* Hole cards */}
         <div style={styles.holeCards}>
           {player.hand ? (
+            // Human player or winner's hand being shown
             player.hand.map((card, i) => renderCard(card, i))
-          ) : player.isHuman ? (
-            null
-          ) : !player.folded && !player.eliminated ? (
-            <>
-              {renderCard({}, 0, true)}
-              {renderCard({}, 1, true)}
-            </>
-          ) : null}
+          ) : (
+            // Check if this is the winner and we should show their hand
+            gameState.isGameOver && showWinnerHand && gameState.winner?.id === player.id && gameState.winner?.hand ? (
+              gameState.winner.hand.map((card, i) => renderCard(card, i))
+            ) : player.isHuman ? (
+              null
+            ) : !player.folded && !player.eliminated ? (
+              <>
+                {renderCard({}, 0, true)}
+                {renderCard({}, 1, true)}
+              </>
+            ) : null
+          )}
         </div>
 
         {/* Dealer button */}
@@ -1090,6 +1097,27 @@ export default function PokerTable() {
                 {label}
               </button>
             ))}
+          </div>
+          <label style={{ ...styles.settingsLabel, marginTop: '16px' }}>Show Winner's Hand</label>
+          <div style={styles.settingsOptions}>
+            <button
+              style={{
+                ...styles.settingsOption,
+                ...(showWinnerHand ? styles.settingsOptionActive : {})
+              }}
+              onClick={() => setShowWinnerHand(true)}
+            >
+              On
+            </button>
+            <button
+              style={{
+                ...styles.settingsOption,
+                ...(!showWinnerHand ? styles.settingsOptionActive : {})
+              }}
+              onClick={() => setShowWinnerHand(false)}
+            >
+              Off
+            </button>
           </div>
         </div>
       )}

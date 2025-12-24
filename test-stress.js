@@ -10,7 +10,7 @@
  * - Performance metrics
  */
 
-import { PokerGame } from './lib/gameLogic.js';
+import { PokerGame, selectGameCharacters } from './lib/gameLogic.js';
 
 const VERBOSE = process.argv.includes('--verbose');
 
@@ -178,6 +178,9 @@ function playHand(game) {
 
 // Play a full game
 function playFullGame(maxHands = 200) {
+  // Select random characters for this game (Le Chiffre always included)
+  selectGameCharacters();
+
   const game = new PokerGame(6);
   const stats = {
     hands: 0,
@@ -187,7 +190,8 @@ function playFullGame(maxHands = 200) {
     eliminations: [], // Track when players were eliminated
     finalBlindLevel: 0,
     errors: [],
-    actionCounts: { fold: 0, check: 0, call: 0, raise: 0 }
+    actionCounts: { fold: 0, check: 0, call: 0, raise: 0 },
+    participants: game.players.map(p => p.name) // Track who played in this game
   };
 
   const startingBlindLevel = game.blindLevel;
@@ -297,6 +301,7 @@ function runStressTest(numGames = 100) {
     totalHands: 0,
     errors: [],
     wins: {},
+    appearances: {}, // Track how many games each character appeared in
     handCounts: [],
     eliminationOrder: {},
     actionCounts: { fold: 0, check: 0, call: 0, raise: 0 }
@@ -314,6 +319,11 @@ function runStressTest(numGames = 100) {
 
     results.totalHands += gameStats.hands;
     results.handCounts.push(gameStats.hands);
+
+    // Track appearances for all participants
+    for (const name of gameStats.participants) {
+      results.appearances[name] = (results.appearances[name] || 0) + 1;
+    }
 
     // Track wins
     const winner = gameStats.winner.replace(' (by chips)', '');
@@ -368,19 +378,27 @@ function runStressTest(numGames = 100) {
   // Game Length Histogram
   console.log(createHistogram(results.handCounts, 10, '📈 GAME LENGTH DISTRIBUTION (hands per game)'));
 
-  // Win Rates
-  console.log(`\n🏆 WIN RATES`);
-  console.log(`${'─'.repeat(50)}`);
+  // Win Rates (normalized by appearances)
+  console.log(`\n🏆 WIN RATES (normalized by appearances)`);
+  console.log(`${'─'.repeat(60)}`);
 
-  const sortedWins = Object.entries(results.wins).sort((a, b) => b[1] - a[1]);
-  const maxNameLen = Math.max(...sortedWins.map(([name]) => name.length));
+  // Calculate normalized win rates
+  const winRates = [];
+  for (const [name, appearances] of Object.entries(results.appearances)) {
+    const wins = results.wins[name] || 0;
+    const winRate = (wins / appearances) * 100;
+    winRates.push({ name, wins, appearances, winRate });
+  }
 
-  for (const [name, wins] of sortedWins) {
-    const pct = ((wins / numGames) * 100).toFixed(1);
-    const bar = '█'.repeat(Math.round(parseFloat(pct) / 2));
+  // Sort by win rate descending
+  winRates.sort((a, b) => b.winRate - a.winRate);
+  const maxNameLen = Math.max(...winRates.map(r => r.name.length));
+
+  for (const { name, wins, appearances, winRate } of winRates) {
+    const bar = '█'.repeat(Math.round(winRate / 2));
     const isHuman = name === 'James Bond';
     const marker = isHuman ? ' 👤' : '';
-    console.log(`  ${name.padEnd(maxNameLen)}  ${wins.toString().padStart(5)} wins (${pct.padStart(5)}%) ${bar}${marker}`);
+    console.log(`  ${name.padEnd(maxNameLen)}  ${wins.toString().padStart(4)}/${appearances.toString().padStart(4)} (${winRate.toFixed(1).padStart(5)}%) ${bar}${marker}`);
   }
 
   // Survival Stats
