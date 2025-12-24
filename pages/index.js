@@ -587,7 +587,7 @@ const playerPositions = [
   { bottom: '15px', left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
   { bottom: '140px', left: '6%' },   // Left bottom
   { top: '100px', left: '6%' },      // Left top
-  { top: '15px', left: '50%', transform: 'translateX(-50%)' },     // Top center
+  { top: '-5px', left: '50%', transform: 'translateX(-50%)' },     // Top center (moved up to avoid pot overlap)
   { top: '100px', right: '6%' },     // Right top
   { bottom: '140px', right: '6%' },  // Right bottom
 ];
@@ -597,7 +597,7 @@ const dealerButtonOffsets = [
   { bottom: '95px', left: 'calc(50% + 75px)' },
   { bottom: '200px', left: 'calc(6% + 140px)' },
   { top: '180px', left: 'calc(6% + 140px)' },
-  { top: '95px', left: 'calc(50% + 75px)' },
+  { top: '75px', left: 'calc(50% + 75px)' },  // Adjusted for moved top player
   { top: '180px', right: 'calc(6% + 140px)' },
   { bottom: '200px', right: 'calc(6% + 140px)' },
 ];
@@ -636,46 +636,76 @@ export default function PokerTable() {
       const state = game.startNewHand();
       setGameState(state);
       setBetAmount(state.minRaise * 2);
+
+      // Check if first player is AI and process with delays
+      const currentPlayer = state.players[state.currentPlayer];
+      if (currentPlayer && !currentPlayer.isHuman && state.phase !== 'endHand') {
+        // AI goes first - use delayed processing
+        const checkAndProcess = () => {
+          const newState = game.getState();
+          setGameState(newState);
+
+          const nextPlayer = newState.players[newState.currentPlayer];
+          const isActiveGame = newState.phase !== 'endHand' && newState.phase !== 'gameOver';
+
+          if (nextPlayer && !nextPlayer.isHuman && isActiveGame && !nextPlayer.eliminated) {
+            setTimeout(checkAndProcess, 500);
+          } else {
+            setIsProcessing(false);
+          }
+        };
+        setTimeout(checkAndProcess, 500);
+      } else {
+        setIsProcessing(false);
+      }
     } catch (error) {
       console.error('startNewHand error:', error);
-    }
-
-    setTimeout(() => {
-      setGameState(game.getState());
       setIsProcessing(false);
-    }, 100);
+    }
   }, [game, isProcessing]);
+
+  // Process AI turns with visible delays between each move
+  const processWithAIDelays = useCallback(() => {
+    const checkAndProcess = () => {
+      const state = game.getState();
+      setGameState(state);
+
+      const currentPlayer = state.players[state.currentPlayer];
+      const isActiveGame = state.phase !== 'endHand' && state.phase !== 'gameOver';
+
+      // If it's still AI's turn and game is active, wait and check again
+      if (currentPlayer && !currentPlayer.isHuman && isActiveGame && !currentPlayer.eliminated) {
+        setTimeout(checkAndProcess, 500); // 500ms delay between AI moves
+      } else {
+        setIsProcessing(false);
+      }
+    };
+
+    // Initial delay after human action
+    setTimeout(checkAndProcess, 300);
+  }, [game]);
 
   // Player action handlers
   const handleFold = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
     game.fold();
-    setTimeout(() => {
-      setGameState(game.getState());
-      setIsProcessing(false);
-    }, 100);
-  }, [game, isProcessing]);
+    processWithAIDelays();
+  }, [game, isProcessing, processWithAIDelays]);
 
   const handleCheck = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
     game.check();
-    setTimeout(() => {
-      setGameState(game.getState());
-      setIsProcessing(false);
-    }, 100);
-  }, [game, isProcessing]);
+    processWithAIDelays();
+  }, [game, isProcessing, processWithAIDelays]);
 
   const handleCall = useCallback(() => {
     if (!game || isProcessing) return;
     setIsProcessing(true);
     game.call();
-    setTimeout(() => {
-      setGameState(game.getState());
-      setIsProcessing(false);
-    }, 100);
-  }, [game, isProcessing]);
+    processWithAIDelays();
+  }, [game, isProcessing, processWithAIDelays]);
 
   const handleRaise = useCallback(() => {
     if (!game || isProcessing || !gameState) return;
@@ -685,11 +715,8 @@ export default function PokerTable() {
     } catch (error) {
       console.error('Raise error:', error.message);
     }
-    setTimeout(() => {
-      setGameState(game.getState());
-      setIsProcessing(false);
-    }, 100);
-  }, [game, isProcessing, gameState, betAmount]);
+    processWithAIDelays();
+  }, [game, isProcessing, gameState, betAmount, processWithAIDelays]);
 
   // Render a card
   const renderCard = (card, index, isHidden = false) => {
