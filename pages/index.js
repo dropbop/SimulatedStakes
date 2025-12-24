@@ -314,6 +314,20 @@ const styles = {
     letterSpacing: '0.3em',
     fontWeight: '400',
   },
+  blindsInfo: {
+    position: 'absolute',
+    bottom: '38%',
+    left: '50%',
+    transform: 'translate(-50%, 50%)',
+    fontSize: '0.75rem',
+    color: 'rgba(200, 195, 185, 0.6)',
+    textAlign: 'center',
+    letterSpacing: '0.05em',
+  },
+  blindsAmount: {
+    color: '#c9a227',
+    fontWeight: '500',
+  },
   playerPosition: {
     position: 'absolute',
     display: 'flex',
@@ -852,6 +866,21 @@ export default function PokerTable() {
           <div style={styles.pot}>
             Pot ${(gameState?.pot || 0).toLocaleString()}
           </div>
+
+          {/* Blinds info */}
+          {gameState?.blinds && (
+            <div style={styles.blindsInfo}>
+              <span>Blinds </span>
+              <span style={styles.blindsAmount}>
+                ${gameState.blinds.small.toLocaleString()}/${gameState.blinds.big.toLocaleString()}
+              </span>
+              {gameState.handsUntilBlindIncrease <= 3 && (
+                <span style={{ color: '#e57373', marginLeft: '8px' }}>
+                  (increase in {gameState.handsUntilBlindIncrease})
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Community cards */}
           {renderCommunityCards()}
