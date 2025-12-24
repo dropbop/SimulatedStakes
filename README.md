@@ -1,94 +1,36 @@
-# Poker Game Project
+# Casino Royale Poker
 
-A single-player poker game built with Next.js where you play against AI opponents.
+A single-player Texas Hold'em poker game themed around Casino Royale. Play as James Bond against AI opponents with distinct personalities.
 
-## Current Development Status
+## Play
 
-### Phase 1: Cards and Basic Setup ✓
-- ✅ Implemented card and deck management
-- ✅ Created player objects with basic properties
-- ✅ Set up game state structure
-- ✅ Added blind posting and initial dealing
-- ✅ Created test page to verify functionality
-
-### Phase 2: Game Flow (Current Phase)
-- ✅ Implemented player actions (fold, check, call, raise)
-- ✅ Added community card dealing (flop, turn, river)
-- ✅ Created betting round management
-- ✅ Implemented simple AI decision-making
-- ✅ Added game phase progression
-- ⬜ Implement proper showdown logic
-
-### Future Phases:
-- Phase 3: Hand Evaluation (determine winners, pot distribution)
-- Phase 4: Advanced AI Players (improved decision-making)
-- Phase 5: UI Integration (fully functional game interface)
-
-## Current Project Structure
-```
-poker-game/
-├── lib/
-│   └── gameLogic.js         # Core game logic classes (Card, Deck, Player, PokerGame)
-│
-├── pages/
-│   ├── index.js             # Main poker table UI
-│   └── test.js              # Test page to verify game logic
-│
-├── public/                  # Static assets folder
-│
-├── next.config.js           # Next.js configuration
-└── package.json             # Project dependencies
+```bash
+npm install
+npm run dev
+# Open http://localhost:3000
 ```
 
-## Core Components
+## Characters
 
-### Card Class
-Represents a single playing card with:
-- Suit (spades, hearts, diamonds, clubs)
-- Value (2-10, J, Q, K, A)
-- Methods to display and compare cards
+| Opponent | Playing Style |
+|----------|---------------|
+| **Le Chiffre** | Tight-aggressive, calculating, occasional bluffs |
+| **Vesper Lynd** | Very tight, passive, premium hands only |
+| **Felix Leiter** | Loose-aggressive, constant pressure |
+| **Mathis** | Tricky, unpredictable |
+| **M** | Disciplined, patient |
 
-### Deck Class
-Manages a collection of 52 cards with:
-- Shuffling functionality
-- Card dealing
-- Deck reset capability
+## Features
 
-### Player Class
-Represents a player in the game with:
-- Chip management
-- Hand cards
-- Betting capabilities
-- Fold/All-in status tracking
+- Skilled AI with hand evaluation and pot odds
+- Tournament mode (elimination when chips run out)
+- Pre-flop and post-flop hand strength analysis
+- Position-aware betting
 
-### PokerGame Class
-Orchestrates the entire game with:
-- Game phase management (preflop, flop, turn, river, showdown)
-- Player turn tracking and action handling
-- Dealer and blind position rotation
-- Pot management and betting rounds
-- Community card dealing
-- Simple AI decision making
-- Game action logging
+## Deploy
 
-## Game Flow
-1. New hand is started
-2. Cards are dealt to players
-3. Blinds are posted
-4. Pre-flop betting round
-5. Flop is dealt (3 community cards)
-6. Flop betting round
-7. Turn is dealt (4th community card)
-8. Turn betting round
-9. River is dealt (5th community card)
-10. River betting round
-11. Showdown (compare hands and determine winner)
-12. Award pot to winner
+Push to GitHub, connect to Vercel. Done.
 
-## Testing
-Visit the `/test` page to see the card system in action and verify game initialization.
+## License
 
-## Next Steps
-- Implement betting actions (check, call, raise, fold)
-- Add game flow progression (flop, turn, river)
-- Create hand evaluation logic
+MIT
