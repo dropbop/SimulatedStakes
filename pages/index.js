@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { PokerGame } from '../lib/gameLogic';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 // Global CSS for custom scrollbar and animations
 const globalStyles = `
@@ -177,13 +178,34 @@ const globalStyles = `
     border: 2px solid #0a0a0a;
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
+
+  /* Responsive overrides for smaller screens */
+  @media (max-width: 1023px) {
+    html, body {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+
+  @media (max-width: 767px) {
+    input[type="range"]::-webkit-slider-thumb {
+      height: 24px;
+      width: 24px;
+      margin-top: -10px;
+    }
+    input[type="range"]::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+    }
+  }
 `;
 
 // Casino Royale themed styles - Refined & Cinematic
-const styles = {
+// Helper to generate responsive styles based on scale
+const getResponsiveStyles = (scale, isMobile) => ({
   container: {
-    height: '100vh',
-    padding: '20px',
+    minHeight: '100vh',
+    padding: `clamp(10px, 2vw, 20px)`,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -196,7 +218,117 @@ const styles = {
     color: '#e8e0d5',
     fontFamily: "'Outfit', -apple-system, sans-serif",
     position: 'relative',
+    overflowX: 'hidden',
+    overflowY: isMobile ? 'auto' : 'hidden',
+    paddingBottom: isMobile ? '140px' : '20px',
+  },
+  table: {
+    position: 'relative',
+    height: `clamp(260px, ${62 * scale}vw, 620px)`,
+    margin: '0 auto',
+    width: '100%',
+    maxWidth: `clamp(300px, 90vw, 1050px)`,
+    background: `
+      radial-gradient(ellipse at 50% 30%, rgba(35, 90, 55, 0.95) 0%, rgba(20, 60, 35, 0.95) 40%, rgba(12, 40, 25, 0.98) 70%, rgba(8, 28, 18, 1) 100%)
+    `,
+    borderRadius: '50%',
+    border: `${Math.max(6, Math.round(12 * scale))}px solid #1a1410`,
+    boxShadow: `
+      inset 0 0 ${Math.round(100 * scale)}px rgba(0,0,0,0.5),
+      0 ${Math.round(25 * scale)}px ${Math.round(80 * scale)}px rgba(0,0,0,0.8)
+    `,
+  },
+  card: {
+    width: `clamp(36px, ${5.2 * scale}vw, 52px)`,
+    height: `clamp(50px, ${7.2 * scale}vw, 72px)`,
+    background: 'linear-gradient(145deg, #ffffff 0%, #f8f6f3 50%, #ebe8e4 100%)',
+    borderRadius: `clamp(4px, 0.6vw, 6px)`,
+    border: 'none',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: `clamp(0.75rem, ${1.05 * scale}rem, 1.05rem)`,
+    fontWeight: '600',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)',
+    fontFamily: "'Outfit', sans-serif",
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    position: 'relative',
+  },
+  playerInfo: {
+    background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
+    padding: `clamp(8px, 1.2vw, 12px) clamp(10px, 1.8vw, 18px)`,
+    borderRadius: `clamp(8px, 1.2vw, 12px)`,
+    textAlign: 'center',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    minWidth: `clamp(85px, 12vw, 125px)`,
+    backdropFilter: 'blur(12px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  button: {
+    padding: `clamp(10px, 1.4vw, 14px) clamp(16px, 2.8vw, 28px)`,
+    fontSize: `clamp(0.7rem, 0.85rem, 0.85rem)`,
+    fontWeight: '500',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    border: 'none',
+    textTransform: 'uppercase',
+    letterSpacing: '0.15em',
+    fontFamily: "'Outfit', sans-serif",
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
     overflow: 'hidden',
+    minHeight: '44px',
+    minWidth: isMobile ? '80px' : 'auto',
+  },
+  betControls: {
+    display: 'flex',
+    alignItems: isMobile ? 'stretch' : 'center',
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: isMobile ? '12px' : '20px',
+    background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%)',
+    padding: `clamp(12px, 1.6vw, 16px) clamp(16px, 2.8vw, 28px)`,
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(8px)',
+    width: isMobile ? '100%' : 'auto',
+  },
+  betSlider: {
+    width: isMobile ? '100%' : 'clamp(120px, 18vw, 180px)',
+    height: '24px',
+  },
+  gameLog: {
+    marginTop: `clamp(16px, 2.8vw, 28px)`,
+    padding: `clamp(14px, 2vw, 20px) clamp(16px, 2.4vw, 24px)`,
+    background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
+    borderRadius: '14px',
+    maxHeight: isMobile ? '150px' : '220px',
+    overflowY: 'auto',
+    width: '100%',
+    maxWidth: `clamp(300px, 90vw, 700px)`,
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+  },
+});
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    padding: 'clamp(10px, 2vw, 20px)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    background: `
+      radial-gradient(ellipse at 50% 0%, rgba(20, 30, 48, 0.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(30, 20, 15, 0.6) 0%, transparent 40%),
+      radial-gradient(ellipse at 20% 80%, rgba(15, 25, 20, 0.6) 0%, transparent 40%),
+      linear-gradient(180deg, #0a0b0d 0%, #0d0e12 50%, #08090a 100%)
+    `,
+    color: '#e8e0d5',
+    fontFamily: "'Outfit', -apple-system, sans-serif",
+    position: 'relative',
+    overflowX: 'hidden',
   },
   // Subtle film grain overlay
   grainOverlay: {
@@ -337,18 +469,18 @@ const styles = {
   },
   table: {
     position: 'relative',
-    height: '620px',
+    height: 'clamp(260px, 55vw, 620px)',
     margin: '0 auto',
     width: '100%',
-    maxWidth: '1050px',
+    maxWidth: 'clamp(300px, 90vw, 1050px)',
     background: `
       radial-gradient(ellipse at 50% 30%, rgba(35, 90, 55, 0.95) 0%, rgba(20, 60, 35, 0.95) 40%, rgba(12, 40, 25, 0.98) 70%, rgba(8, 28, 18, 1) 100%)
     `,
     borderRadius: '50%',
-    border: '12px solid #1a1410',
+    border: 'clamp(6px, 1.2vw, 12px) solid #1a1410',
     boxShadow: `
-      inset 0 0 100px rgba(0,0,0,0.5),
-      0 25px 80px rgba(0,0,0,0.8)
+      inset 0 0 clamp(50px, 10vw, 100px) rgba(0,0,0,0.5),
+      0 clamp(12px, 2.5vw, 25px) clamp(40px, 8vw, 80px) rgba(0,0,0,0.8)
     `,
   },
   tableRail: {
@@ -379,7 +511,7 @@ const styles = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     display: 'flex',
-    gap: '10px',
+    gap: 'clamp(4px, 1vw, 10px)',
     perspective: '1000px',
   },
   pot: {
@@ -387,26 +519,27 @@ const styles = {
     top: '32%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    fontSize: '1rem',
+    fontSize: 'clamp(0.75rem, 1vw, 1rem)',
     fontWeight: '500',
     color: '#c9a227',
     textShadow: '0 2px 8px rgba(0,0,0,0.6)',
     background: 'linear-gradient(180deg, rgba(10, 10, 10, 0.85) 0%, rgba(5, 5, 5, 0.9) 100%)',
-    padding: '10px 24px',
+    padding: 'clamp(6px, 1vw, 10px) clamp(12px, 2.4vw, 24px)',
     borderRadius: '24px',
     border: '1px solid rgba(201, 162, 39, 0.25)',
     backdropFilter: 'blur(8px)',
     letterSpacing: '0.1em',
+    whiteSpace: 'nowrap',
   },
   phaseIndicator: {
     position: 'absolute',
     top: '22%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    fontSize: '0.7rem',
+    fontSize: 'clamp(0.55rem, 0.7vw, 0.7rem)',
     color: 'rgba(200, 195, 185, 0.5)',
     textTransform: 'uppercase',
-    letterSpacing: '0.3em',
+    letterSpacing: 'clamp(0.15em, 0.3em, 0.3em)',
     fontWeight: '400',
   },
   blindsInfo: {
@@ -414,10 +547,11 @@ const styles = {
     bottom: '38%',
     left: '50%',
     transform: 'translate(-50%, 50%)',
-    fontSize: '0.75rem',
+    fontSize: 'clamp(0.6rem, 0.75vw, 0.75rem)',
     color: 'rgba(200, 195, 185, 0.6)',
     textAlign: 'center',
     letterSpacing: '0.05em',
+    whiteSpace: 'nowrap',
   },
   blindsAmount: {
     color: '#c9a227',
@@ -433,11 +567,11 @@ const styles = {
   },
   playerInfo: {
     background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
-    padding: '12px 18px',
-    borderRadius: '12px',
+    padding: 'clamp(8px, 1.2vw, 12px) clamp(10px, 1.8vw, 18px)',
+    borderRadius: 'clamp(8px, 1.2vw, 12px)',
     textAlign: 'center',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    minWidth: '125px',
+    minWidth: 'clamp(80px, 12vw, 125px)',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -454,32 +588,36 @@ const styles = {
     filter: 'grayscale(80%)',
   },
   playerName: {
-    marginBottom: '5px',
+    marginBottom: 'clamp(3px, 0.5vw, 5px)',
     fontWeight: '500',
-    fontSize: '0.9rem',
+    fontSize: 'clamp(0.7rem, 0.9vw, 0.9rem)',
     color: '#e8e0d5',
     letterSpacing: '0.02em',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: 'clamp(70px, 10vw, 120px)',
   },
   playerChips: {
-    fontSize: '0.85rem',
+    fontSize: 'clamp(0.65rem, 0.85vw, 0.85rem)',
     color: '#c9a227',
     fontWeight: '500',
     fontFamily: "'Outfit', sans-serif",
   },
   playerBet: {
-    fontSize: '0.75rem',
+    fontSize: 'clamp(0.6rem, 0.75vw, 0.75rem)',
     color: '#6dba82',
-    marginTop: '4px',
+    marginTop: 'clamp(2px, 0.4vw, 4px)',
     fontWeight: '400',
   },
   dealerButton: {
     position: 'absolute',
-    width: '26px',
-    height: '26px',
+    width: 'clamp(18px, 2.6vw, 26px)',
+    height: 'clamp(18px, 2.6vw, 26px)',
     borderRadius: '50%',
     background: 'linear-gradient(145deg, #f5f5f0 0%, #d4d0c8 50%, #b8b4ac 100%)',
     color: '#1a1a1a',
-    fontSize: '9px',
+    fontSize: 'clamp(7px, 0.9vw, 9px)',
     fontWeight: '700',
     display: 'flex',
     alignItems: 'center',
@@ -489,15 +627,15 @@ const styles = {
     letterSpacing: '0.05em',
   },
   card: {
-    width: '52px',
-    height: '72px',
+    width: 'clamp(36px, 5.2vw, 52px)',
+    height: 'clamp(50px, 7.2vw, 72px)',
     background: 'linear-gradient(145deg, #ffffff 0%, #f8f6f3 50%, #ebe8e4 100%)',
-    borderRadius: '6px',
+    borderRadius: 'clamp(4px, 0.6vw, 6px)',
     border: 'none',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: '1.05rem',
+    fontSize: 'clamp(0.75rem, 1.05vw, 1.05rem)',
     fontWeight: '600',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)',
     fontFamily: "'Outfit', sans-serif",
@@ -546,35 +684,40 @@ const styles = {
   },
   holeCards: {
     display: 'flex',
-    gap: '5px',
-    marginTop: '10px',
+    gap: 'clamp(3px, 0.5vw, 5px)',
+    marginTop: 'clamp(6px, 1vw, 10px)',
   },
   controls: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    marginTop: '24px',
-    gap: '18px',
+    marginTop: 'clamp(12px, 2.4vw, 24px)',
+    gap: 'clamp(10px, 1.8vw, 18px)',
+    width: '100%',
+    maxWidth: '600px',
+    padding: '0 10px',
   },
   buttonRow: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '12px',
+    gap: 'clamp(6px, 1.2vw, 12px)',
     flexWrap: 'wrap',
+    width: '100%',
   },
   button: {
-    padding: '14px 28px',
-    fontSize: '0.85rem',
+    padding: 'clamp(10px, 1.4vw, 14px) clamp(14px, 2.8vw, 28px)',
+    fontSize: 'clamp(0.7rem, 0.85vw, 0.85rem)',
     fontWeight: '500',
     borderRadius: '8px',
     cursor: 'pointer',
     border: 'none',
     textTransform: 'uppercase',
-    letterSpacing: '0.15em',
+    letterSpacing: 'clamp(0.08em, 0.15em, 0.15em)',
     fontFamily: "'Outfit', sans-serif",
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
+    minHeight: '44px',
   },
   foldButton: {
     background: 'linear-gradient(180deg, #7f1d1d 0%, #5c1515 100%)',
@@ -605,59 +748,65 @@ const styles = {
   betControls: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
+    gap: 'clamp(10px, 2vw, 20px)',
     background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.9) 0%, rgba(10, 10, 12, 0.95) 100%)',
-    padding: '16px 28px',
+    padding: 'clamp(12px, 1.6vw, 16px) clamp(14px, 2.8vw, 28px)',
     borderRadius: '12px',
     border: '1px solid rgba(255, 255, 255, 0.05)',
     backdropFilter: 'blur(8px)',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: '400px',
   },
   betLabel: {
     color: 'rgba(200, 195, 185, 0.6)',
-    fontSize: '0.8rem',
+    fontSize: 'clamp(0.65rem, 0.8vw, 0.8rem)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
   },
   betSlider: {
-    width: '180px',
-    height: '20px',
+    width: 'clamp(100px, 18vw, 180px)',
+    height: '24px',
+    flex: '1 1 auto',
+    minWidth: '80px',
   },
   betAmount: {
-    fontSize: '1rem',
+    fontSize: 'clamp(0.85rem, 1vw, 1rem)',
     color: '#c9a227',
     fontWeight: '500',
-    minWidth: '75px',
+    minWidth: 'clamp(55px, 7.5vw, 75px)',
     textAlign: 'right',
     fontFamily: "'Outfit', sans-serif",
   },
   gameLog: {
-    marginTop: '28px',
-    padding: '20px 24px',
+    marginTop: 'clamp(16px, 2.8vw, 28px)',
+    padding: 'clamp(12px, 2vw, 20px) clamp(14px, 2.4vw, 24px)',
     background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
     borderRadius: '14px',
-    maxHeight: '220px',
+    maxHeight: 'clamp(120px, 22vw, 220px)',
     overflowY: 'auto',
     width: '100%',
-    maxWidth: '700px',
+    maxWidth: 'clamp(300px, 70vw, 700px)',
     border: '1px solid rgba(255, 255, 255, 0.06)',
     backdropFilter: 'blur(10px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
   },
   logHeader: {
-    fontSize: '0.7rem',
+    fontSize: 'clamp(0.6rem, 0.7vw, 0.7rem)',
     color: 'rgba(201, 162, 39, 0.6)',
     textTransform: 'uppercase',
     letterSpacing: '0.2em',
-    marginBottom: '12px',
-    paddingBottom: '10px',
+    marginBottom: 'clamp(8px, 1.2vw, 12px)',
+    paddingBottom: 'clamp(6px, 1vw, 10px)',
     borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
   },
   logEntry: {
-    margin: '8px 0',
-    fontSize: '0.85rem',
+    margin: 'clamp(4px, 0.8vw, 8px) 0',
+    fontSize: 'clamp(0.7rem, 0.85vw, 0.85rem)',
     color: 'rgba(220, 215, 205, 0.75)',
     lineHeight: '1.5',
-    paddingLeft: '12px',
+    paddingLeft: 'clamp(8px, 1.2vw, 12px)',
     borderLeft: '2px solid rgba(201, 162, 39, 0.2)',
   },
   logEntryLatest: {
@@ -666,8 +815,8 @@ const styles = {
   },
   statusMessage: {
     textAlign: 'center',
-    padding: '20px',
-    fontSize: '1.05rem',
+    padding: 'clamp(10px, 2vw, 20px)',
+    fontSize: 'clamp(0.85rem, 1.05vw, 1.05rem)',
     color: 'rgba(201, 162, 39, 0.9)',
     fontWeight: '400',
     letterSpacing: '0.05em',
@@ -680,23 +829,23 @@ const styles = {
     position: 'absolute',
     background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
     border: '1px solid rgba(201, 162, 39, 0.35)',
-    borderRadius: '10px',
-    padding: '10px 14px',
-    maxWidth: '200px',
+    borderRadius: 'clamp(6px, 1vw, 10px)',
+    padding: 'clamp(6px, 1vw, 10px) clamp(8px, 1.4vw, 14px)',
+    maxWidth: 'clamp(120px, 20vw, 200px)',
     zIndex: 100,
     boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
     backdropFilter: 'blur(8px)',
   },
   dialogueCharacter: {
-    fontSize: '0.7rem',
+    fontSize: 'clamp(0.55rem, 0.7vw, 0.7rem)',
     color: 'rgba(201, 162, 39, 0.8)',
     textTransform: 'uppercase',
     letterSpacing: '0.1em',
-    marginBottom: '4px',
+    marginBottom: 'clamp(2px, 0.4vw, 4px)',
     fontWeight: '500',
   },
   dialogueLine: {
-    fontSize: '0.85rem',
+    fontSize: 'clamp(0.7rem, 0.85vw, 0.85rem)',
     color: 'rgba(232, 224, 213, 0.95)',
     lineHeight: '1.4',
     fontFamily: "'Cormorant Garamond', Georgia, serif",
@@ -707,35 +856,47 @@ const styles = {
   },
 };
 
-// Player positions around the table (6 players) - spread out for larger table
-const playerPositions = [
-  { bottom: '15px', left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
-  { bottom: '140px', left: '6%' },   // Left bottom
-  { top: '100px', left: '6%' },      // Left top
-  { top: '-5px', left: '50%', transform: 'translateX(-50%)' },     // Top center (moved up to avoid pot overlap)
-  { top: '100px', right: '6%' },     // Right top
-  { bottom: '140px', right: '6%' },  // Right bottom
-];
+// Player positions around the table (6 players) - responsive with scale factor
+const getPlayerPositions = (scale = 1) => {
+  const s = Math.max(0.5, scale);
+  return [
+    { bottom: `${Math.round(15 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
+    { bottom: `${Math.round(140 * s)}px`, left: `${4 + 2 * s}%` },   // Left bottom
+    { top: `${Math.round(100 * s)}px`, left: `${4 + 2 * s}%` },      // Left top
+    { top: `${Math.round(-5 * s)}px`, left: '50%', transform: 'translateX(-50%)' },     // Top center
+    { top: `${Math.round(100 * s)}px`, right: `${4 + 2 * s}%` },     // Right top
+    { bottom: `${Math.round(140 * s)}px`, right: `${4 + 2 * s}%` },  // Right bottom
+  ];
+};
 
-// Dealer button offsets - adjusted for larger table
-const dealerButtonOffsets = [
-  { bottom: '95px', left: 'calc(50% + 75px)' },
-  { bottom: '200px', left: 'calc(6% + 140px)' },
-  { top: '180px', left: 'calc(6% + 140px)' },
-  { top: '75px', left: 'calc(50% + 75px)' },  // Adjusted for moved top player
-  { top: '180px', right: 'calc(6% + 140px)' },
-  { bottom: '200px', right: 'calc(6% + 140px)' },
-];
+// Dealer button offsets - responsive with scale factor
+const getDealerButtonOffsets = (scale = 1) => {
+  const s = Math.max(0.5, scale);
+  const offset = Math.round(140 * s);
+  const centerOffset = Math.round(75 * s);
+  return [
+    { bottom: `${Math.round(95 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
+    { bottom: `${Math.round(200 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },
+    { top: `${Math.round(180 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },
+    { top: `${Math.round(75 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
+    { top: `${Math.round(180 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },
+    { bottom: `${Math.round(200 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },
+  ];
+};
 
-// Dialogue bubble positions (offset from player positions)
-const dialoguePositions = [
-  { bottom: '160px', left: '50%', transform: 'translateX(-50%)' },  // Player (above)
-  { bottom: '200px', left: 'calc(6% + 145px)' },   // Left bottom (right of player)
-  { top: '160px', left: 'calc(6% + 145px)' },      // Left top (right of player)
-  { top: '85px', left: '50%', transform: 'translateX(-50%)' },  // Top center (below)
-  { top: '160px', right: 'calc(6% + 145px)' },     // Right top (left of player)
-  { bottom: '200px', right: 'calc(6% + 145px)' },  // Right bottom (left of player)
-];
+// Dialogue bubble positions - responsive with scale factor
+const getDialoguePositions = (scale = 1) => {
+  const s = Math.max(0.5, scale);
+  const offset = Math.round(145 * s);
+  return [
+    { bottom: `${Math.round(160 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (above)
+    { bottom: `${Math.round(200 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },   // Left bottom
+    { top: `${Math.round(160 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },      // Left top
+    { top: `${Math.round(85 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Top center
+    { top: `${Math.round(160 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },     // Right top
+    { bottom: `${Math.round(200 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },  // Right bottom
+  ];
+};
 
 // Animation speed settings (ms between AI moves)
 const SPEED_OPTIONS = {
@@ -756,6 +917,14 @@ export default function PokerTable() {
   const [dialogueKey, setDialogueKey] = useState(0); // For forcing re-animation
   const [currentAction, setCurrentAction] = useState(null);
   const [actionKey, setActionKey] = useState(0); // For forcing re-animation
+
+  // Responsive breakpoint hook
+  const { scale, isMobile } = useBreakpoint();
+
+  // Compute responsive positions based on current scale
+  const playerPositions = getPlayerPositions(scale);
+  const dealerButtonOffsets = getDealerButtonOffsets(scale);
+  const dialoguePositions = getDialoguePositions(scale);
 
   // Initialize game on mount
   useEffect(() => {
@@ -1162,7 +1331,11 @@ export default function PokerTable() {
   const isGameOver = gameState?.phase === 'gameOver' || gameState?.isGameOver;
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      overflowY: isMobile ? 'auto' : 'hidden',
+      paddingBottom: isMobile ? '20px' : undefined,
+    }}>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
       <div style={styles.grainOverlay} />
       <div style={styles.vignette} />
@@ -1239,6 +1412,7 @@ export default function PokerTable() {
       <Head>
         <title>Casino Royale</title>
         <meta name="description" content="A Casino Royale themed poker game" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
