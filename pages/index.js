@@ -567,11 +567,12 @@ const styles = {
   },
   playerInfo: {
     background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
-    padding: 'clamp(8px, 1.2vw, 12px) clamp(10px, 1.8vw, 18px)',
+    padding: 'clamp(6px, 1vw, 12px) clamp(8px, 1.5vw, 18px)',
     borderRadius: 'clamp(8px, 1.2vw, 12px)',
     textAlign: 'center',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    minWidth: 'clamp(65px, 10vw, 125px)',
+    minWidth: 'clamp(60px, 9vw, 125px)',
+    maxWidth: '130px',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -856,51 +857,35 @@ const styles = {
   },
 };
 
-// Player positions around the table (6 players) - responsive with scale factor
-const getPlayerPositions = (scale = 1) => {
-  const s = Math.max(0.5, scale);
-  // Use wider margins on smaller screens to prevent overlap
-  const sideMargin = Math.max(2, 4 * s);
-  return [
-    { bottom: `${Math.round(10 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
-    { bottom: `${Math.round(115 * s)}px`, left: `${sideMargin}%` },   // Left bottom
-    { top: `${Math.round(80 * s)}px`, left: `${sideMargin}%` },      // Left top
-    { top: `${Math.round(-5 * s)}px`, left: '50%', transform: 'translateX(-50%)' },     // Top center
-    { top: `${Math.round(80 * s)}px`, right: `${sideMargin}%` },     // Right top
-    { bottom: `${Math.round(115 * s)}px`, right: `${sideMargin}%` },  // Right bottom
-  ];
-};
+// Player positions around the table (6 players) - pure percentage-based for reliable scaling
+const getPlayerPositions = () => [
+  { bottom: '3%', left: '50%', transform: 'translateX(-50%)' },   // Bottom center (human player)
+  { bottom: '25%', left: '5%' },                                   // Left bottom
+  { top: '22%', left: '5%' },                                      // Left top
+  { top: '0%', left: '50%', transform: 'translateX(-50%)' },       // Top center
+  { top: '22%', right: '5%' },                                     // Right top
+  { bottom: '25%', right: '5%' },                                  // Right bottom
+];
 
-// Dealer button offsets - responsive with scale factor
-const getDealerButtonOffsets = (scale = 1) => {
-  const s = Math.max(0.5, scale);
-  const sideMargin = Math.max(2, 4 * s);
-  const offset = Math.round(100 * s);
-  const centerOffset = Math.round(60 * s);
-  return [
-    { bottom: `${Math.round(75 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
-    { bottom: `${Math.round(170 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },
-    { top: `${Math.round(150 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },
-    { top: `${Math.round(60 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
-    { top: `${Math.round(150 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },
-    { bottom: `${Math.round(170 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },
-  ];
-};
+// Dealer button offsets - percentage-based
+const getDealerButtonOffsets = () => [
+  { bottom: '16%', left: '55%' },                                  // Near bottom player
+  { bottom: '38%', left: '15%' },                                  // Near left-bottom
+  { top: '35%', left: '15%' },                                     // Near left-top
+  { top: '12%', left: '55%' },                                     // Near top player
+  { top: '35%', right: '15%' },                                    // Near right-top
+  { bottom: '38%', right: '15%' },                                 // Near right-bottom
+];
 
-// Dialogue bubble positions - responsive with scale factor
-const getDialoguePositions = (scale = 1) => {
-  const s = Math.max(0.5, scale);
-  const sideMargin = Math.max(2, 4 * s);
-  const offset = Math.round(105 * s);
-  return [
-    { bottom: `${Math.round(130 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (above)
-    { bottom: `${Math.round(170 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },   // Left bottom
-    { top: `${Math.round(140 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },      // Left top
-    { top: `${Math.round(70 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Top center
-    { top: `${Math.round(140 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },     // Right top
-    { bottom: `${Math.round(170 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },  // Right bottom
-  ];
-};
+// Dialogue bubble positions - percentage-based
+const getDialoguePositions = () => [
+  { bottom: '28%', left: '50%', transform: 'translateX(-50%)' },   // Above bottom player
+  { bottom: '38%', left: '18%' },                                  // Right of left-bottom
+  { top: '35%', left: '18%' },                                     // Right of left-top
+  { top: '15%', left: '50%', transform: 'translateX(-50%)' },      // Below top player
+  { top: '35%', right: '18%' },                                    // Left of right-top
+  { bottom: '38%', right: '18%' },                                 // Left of right-bottom
+];
 
 // Animation speed settings (ms between AI moves)
 const SPEED_OPTIONS = {
@@ -923,12 +908,12 @@ export default function PokerTable() {
   const [actionKey, setActionKey] = useState(0); // For forcing re-animation
 
   // Responsive breakpoint hook
-  const { scale, isMobile } = useBreakpoint();
+  const { isMobile } = useBreakpoint();
 
-  // Compute responsive positions based on current scale
-  const playerPositions = getPlayerPositions(scale);
-  const dealerButtonOffsets = getDealerButtonOffsets(scale);
-  const dialoguePositions = getDialoguePositions(scale);
+  // Player positions use pure percentages - no scale needed
+  const playerPositions = getPlayerPositions();
+  const dealerButtonOffsets = getDealerButtonOffsets();
+  const dialoguePositions = getDialoguePositions();
 
   // Initialize game on mount
   useEffect(() => {
