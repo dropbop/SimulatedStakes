@@ -239,15 +239,15 @@ const getResponsiveStyles = (scale, isMobile) => ({
     `,
   },
   card: {
-    width: `clamp(36px, ${5.2 * scale}vw, 52px)`,
-    height: `clamp(50px, ${7.2 * scale}vw, 72px)`,
+    width: `clamp(32px, ${4.5 * scale}vw, 48px)`,
+    height: `clamp(44px, ${6.3 * scale}vw, 67px)`,
     background: 'linear-gradient(145deg, #ffffff 0%, #f8f6f3 50%, #ebe8e4 100%)',
-    borderRadius: `clamp(4px, 0.6vw, 6px)`,
+    borderRadius: `clamp(3px, 0.5vw, 5px)`,
     border: 'none',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: `clamp(0.75rem, ${1.05 * scale}rem, 1.05rem)`,
+    fontSize: `clamp(0.7rem, ${0.95 * scale}rem, 0.95rem)`,
     fontWeight: '600',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)',
     fontFamily: "'Outfit', sans-serif",
@@ -256,11 +256,12 @@ const getResponsiveStyles = (scale, isMobile) => ({
   },
   playerInfo: {
     background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
-    padding: `clamp(8px, 1.2vw, 12px) clamp(10px, 1.8vw, 18px)`,
-    borderRadius: `clamp(8px, 1.2vw, 12px)`,
+    padding: `clamp(4px, 0.8vw, 10px) clamp(6px, 1.2vw, 14px)`,
+    borderRadius: `clamp(6px, 1vw, 10px)`,
     textAlign: 'center',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    minWidth: `clamp(85px, 12vw, 125px)`,
+    minWidth: `clamp(55px, 8vw, 110px)`,
+    maxWidth: '115px',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -567,12 +568,12 @@ const styles = {
   },
   playerInfo: {
     background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.92) 0%, rgba(10, 10, 12, 0.95) 100%)',
-    padding: 'clamp(6px, 1vw, 12px) clamp(8px, 1.5vw, 18px)',
-    borderRadius: 'clamp(8px, 1.2vw, 12px)',
+    padding: 'clamp(4px, 0.8vw, 10px) clamp(6px, 1.2vw, 14px)',
+    borderRadius: 'clamp(6px, 1vw, 10px)',
     textAlign: 'center',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    minWidth: 'clamp(60px, 9vw, 125px)',
-    maxWidth: '130px',
+    minWidth: 'clamp(55px, 8vw, 110px)',
+    maxWidth: '115px',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -628,15 +629,15 @@ const styles = {
     letterSpacing: '0.05em',
   },
   card: {
-    width: 'clamp(36px, 5.2vw, 52px)',
-    height: 'clamp(50px, 7.2vw, 72px)',
+    width: 'clamp(32px, 4.5vw, 48px)',
+    height: 'clamp(44px, 6.3vw, 67px)',
     background: 'linear-gradient(145deg, #ffffff 0%, #f8f6f3 50%, #ebe8e4 100%)',
-    borderRadius: 'clamp(4px, 0.6vw, 6px)',
+    borderRadius: 'clamp(3px, 0.5vw, 5px)',
     border: 'none',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: 'clamp(0.75rem, 1.05vw, 1.05rem)',
+    fontSize: 'clamp(0.7rem, 0.95vw, 0.95rem)',
     fontWeight: '600',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)',
     fontFamily: "'Outfit', sans-serif",
@@ -859,32 +860,38 @@ const styles = {
 
 // Player positions around the table (6 players) - pure percentage-based for reliable scaling
 const getPlayerPositions = () => [
-  { bottom: '3%', left: '50%', transform: 'translateX(-50%)' },   // Bottom center (human player)
-  { bottom: '25%', left: '5%' },                                   // Left bottom
-  { top: '22%', left: '5%' },                                      // Left top
-  { top: '0%', left: '50%', transform: 'translateX(-50%)' },       // Top center
-  { top: '22%', right: '5%' },                                     // Right top
-  { bottom: '25%', right: '5%' },                                  // Right bottom
+  // Bottom center (human player) - 270° on ellipse
+  { bottom: '-2%', left: '50%', transform: 'translateX(-50%)' },
+  // Bottom-left - 225° on ellipse
+  { top: '65%', left: '8%', transform: 'translateY(-50%)' },
+  // Top-left - 135° on ellipse
+  { top: '35%', left: '8%', transform: 'translateY(-50%)' },
+  // Top center - 90° on ellipse
+  { top: '-2%', left: '50%', transform: 'translateX(-50%)' },
+  // Top-right - 45° on ellipse
+  { top: '35%', right: '8%', transform: 'translateY(-50%)' },
+  // Bottom-right - 315° on ellipse
+  { top: '65%', right: '8%', transform: 'translateY(-50%)' },
 ];
 
-// Dealer button offsets - percentage-based
+// Dealer button offsets - aligned with ellipse positions
 const getDealerButtonOffsets = () => [
-  { bottom: '16%', left: '55%' },                                  // Near bottom player
-  { bottom: '38%', left: '15%' },                                  // Near left-bottom
-  { top: '35%', left: '15%' },                                     // Near left-top
-  { top: '12%', left: '55%' },                                     // Near top player
-  { top: '35%', right: '15%' },                                    // Near right-top
-  { bottom: '38%', right: '15%' },                                 // Near right-bottom
+  { bottom: '12%', left: '56%' },      // Near bottom player
+  { top: '72%', left: '18%' },          // Near left-bottom
+  { top: '28%', left: '18%' },          // Near left-top
+  { top: '8%', left: '56%' },           // Near top player
+  { top: '28%', right: '18%' },         // Near right-top
+  { top: '72%', right: '18%' },         // Near right-bottom
 ];
 
-// Dialogue bubble positions - percentage-based
+// Dialogue bubble positions - aligned with ellipse positions
 const getDialoguePositions = () => [
-  { bottom: '28%', left: '50%', transform: 'translateX(-50%)' },   // Above bottom player
-  { bottom: '38%', left: '18%' },                                  // Right of left-bottom
-  { top: '35%', left: '18%' },                                     // Right of left-top
-  { top: '15%', left: '50%', transform: 'translateX(-50%)' },      // Below top player
-  { top: '35%', right: '18%' },                                    // Left of right-top
-  { bottom: '38%', right: '18%' },                                 // Left of right-bottom
+  { bottom: '22%', left: '50%', transform: 'translateX(-50%)' },   // Above bottom player
+  { top: '72%', left: '22%' },                                     // Right of left-bottom
+  { top: '28%', left: '22%' },                                     // Right of left-top
+  { top: '12%', left: '50%', transform: 'translateX(-50%)' },      // Below top player
+  { top: '28%', right: '22%' },                                    // Left of right-top
+  { top: '72%', right: '22%' },                                    // Left of right-bottom
 ];
 
 // Animation speed settings (ms between AI moves)
