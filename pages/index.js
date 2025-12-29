@@ -180,7 +180,7 @@ const globalStyles = `
   }
 
   /* Responsive overrides for smaller screens */
-  @media (max-width: 1023px) {
+  @media (max-width: 1199px) {
     html, body {
       overflow-y: auto;
       overflow-x: hidden;
@@ -469,7 +469,7 @@ const styles = {
   },
   table: {
     position: 'relative',
-    height: 'clamp(260px, 55vw, 620px)',
+    height: 'clamp(240px, 45vh, 520px)',
     margin: '0 auto',
     width: '100%',
     maxWidth: 'clamp(300px, 90vw, 1050px)',
@@ -571,7 +571,7 @@ const styles = {
     borderRadius: 'clamp(8px, 1.2vw, 12px)',
     textAlign: 'center',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    minWidth: 'clamp(80px, 12vw, 125px)',
+    minWidth: 'clamp(65px, 10vw, 125px)',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -784,7 +784,7 @@ const styles = {
     padding: 'clamp(12px, 2vw, 20px) clamp(14px, 2.4vw, 24px)',
     background: 'linear-gradient(180deg, rgba(10, 10, 12, 0.95) 0%, rgba(5, 5, 7, 0.98) 100%)',
     borderRadius: '14px',
-    maxHeight: 'clamp(120px, 22vw, 220px)',
+    maxHeight: 'clamp(100px, 15vh, 180px)',
     overflowY: 'auto',
     width: '100%',
     maxWidth: 'clamp(300px, 70vw, 700px)',
@@ -859,42 +859,46 @@ const styles = {
 // Player positions around the table (6 players) - responsive with scale factor
 const getPlayerPositions = (scale = 1) => {
   const s = Math.max(0.5, scale);
+  // Use wider margins on smaller screens to prevent overlap
+  const sideMargin = Math.max(2, 4 * s);
   return [
-    { bottom: `${Math.round(15 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
-    { bottom: `${Math.round(140 * s)}px`, left: `${4 + 2 * s}%` },   // Left bottom
-    { top: `${Math.round(100 * s)}px`, left: `${4 + 2 * s}%` },      // Left top
+    { bottom: `${Math.round(10 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (bottom center)
+    { bottom: `${Math.round(115 * s)}px`, left: `${sideMargin}%` },   // Left bottom
+    { top: `${Math.round(80 * s)}px`, left: `${sideMargin}%` },      // Left top
     { top: `${Math.round(-5 * s)}px`, left: '50%', transform: 'translateX(-50%)' },     // Top center
-    { top: `${Math.round(100 * s)}px`, right: `${4 + 2 * s}%` },     // Right top
-    { bottom: `${Math.round(140 * s)}px`, right: `${4 + 2 * s}%` },  // Right bottom
+    { top: `${Math.round(80 * s)}px`, right: `${sideMargin}%` },     // Right top
+    { bottom: `${Math.round(115 * s)}px`, right: `${sideMargin}%` },  // Right bottom
   ];
 };
 
 // Dealer button offsets - responsive with scale factor
 const getDealerButtonOffsets = (scale = 1) => {
   const s = Math.max(0.5, scale);
-  const offset = Math.round(140 * s);
-  const centerOffset = Math.round(75 * s);
+  const sideMargin = Math.max(2, 4 * s);
+  const offset = Math.round(100 * s);
+  const centerOffset = Math.round(60 * s);
   return [
-    { bottom: `${Math.round(95 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
-    { bottom: `${Math.round(200 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },
-    { top: `${Math.round(180 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },
-    { top: `${Math.round(75 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
-    { top: `${Math.round(180 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },
-    { bottom: `${Math.round(200 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },
+    { bottom: `${Math.round(75 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
+    { bottom: `${Math.round(170 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },
+    { top: `${Math.round(150 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },
+    { top: `${Math.round(60 * s)}px`, left: `calc(50% + ${centerOffset}px)` },
+    { top: `${Math.round(150 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },
+    { bottom: `${Math.round(170 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },
   ];
 };
 
 // Dialogue bubble positions - responsive with scale factor
 const getDialoguePositions = (scale = 1) => {
   const s = Math.max(0.5, scale);
-  const offset = Math.round(145 * s);
+  const sideMargin = Math.max(2, 4 * s);
+  const offset = Math.round(105 * s);
   return [
-    { bottom: `${Math.round(160 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (above)
-    { bottom: `${Math.round(200 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },   // Left bottom
-    { top: `${Math.round(160 * s)}px`, left: `calc(${4 + 2 * s}% + ${offset}px)` },      // Left top
-    { top: `${Math.round(85 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Top center
-    { top: `${Math.round(160 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },     // Right top
-    { bottom: `${Math.round(200 * s)}px`, right: `calc(${4 + 2 * s}% + ${offset}px)` },  // Right bottom
+    { bottom: `${Math.round(130 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Player (above)
+    { bottom: `${Math.round(170 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },   // Left bottom
+    { top: `${Math.round(140 * s)}px`, left: `calc(${sideMargin}% + ${offset}px)` },      // Left top
+    { top: `${Math.round(70 * s)}px`, left: '50%', transform: 'translateX(-50%)' },  // Top center
+    { top: `${Math.round(140 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },     // Right top
+    { bottom: `${Math.round(170 * s)}px`, right: `calc(${sideMargin}% + ${offset}px)` },  // Right bottom
   ];
 };
 
@@ -1333,8 +1337,8 @@ export default function PokerTable() {
   return (
     <div style={{
       ...styles.container,
-      overflowY: isMobile ? 'auto' : 'hidden',
-      paddingBottom: isMobile ? '20px' : undefined,
+      overflowY: 'auto',
+      paddingBottom: '20px',
     }}>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
       <div style={styles.grainOverlay} />

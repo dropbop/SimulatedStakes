@@ -14,6 +14,7 @@ export function useBreakpoint() {
     scale: 1,
     isMobile: false,
     isTablet: false,
+    isSmallScreen: false,
   });
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function useBreakpoint() {
         scale,
         isMobile: width < BREAKPOINTS.sm,
         isTablet: width >= BREAKPOINTS.sm && width < BREAKPOINTS.md,
+        isSmallScreen: width < 1200,
       });
     };
 
